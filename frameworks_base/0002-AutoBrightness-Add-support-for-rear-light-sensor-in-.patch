@@ -1,0 +1,139 @@
+From 42de8bd25492aa052ab661117c873fef1b731910 Mon Sep 17 00:00:00 2001
+From: flakeforever <113103193+flakeforever@users.noreply.github.com>
+Date: Sun, 1 Sep 2024 14:41:39 +0800
+Subject: [PATCH] AutoBrightness: Add support for rear light sensor in
+ auto-brightness
+
+---
+ .../AutomaticBrightnessController.java        | 43 ++++++++++++++++++-
+ 1 file changed, 41 insertions(+), 2 deletions(-)
+
+diff --git a/services/core/java/com/android/server/display/AutomaticBrightnessController.java b/services/core/java/com/android/server/display/AutomaticBrightnessController.java
+index 8f45e17ce7af..651579bb3a86 100644
+--- a/services/core/java/com/android/server/display/AutomaticBrightnessController.java
++++ b/services/core/java/com/android/server/display/AutomaticBrightnessController.java
+@@ -53,6 +53,7 @@ import com.android.internal.display.BrightnessSynchronizer;
+ import com.android.internal.os.BackgroundThread;
+ import com.android.server.EventLogTags;
+ import com.android.server.display.brightness.BrightnessEvent;
++import com.android.server.display.utils.SensorUtils;
+ 
+ import java.io.PrintWriter;
+ import java.lang.annotation.Retention;
+@@ -111,6 +112,9 @@ public class AutomaticBrightnessController {
+     // The light sensor, or null if not available or needed.
+     private final Sensor mLightSensor;
+ 
++    // The light sensor, or null if not available or needed.
++    private final Sensor mBackLightSensor;
++
+     // The mapper to translate ambient lux to screen brightness in the range [0, 1.0].
+     @NonNull
+     private BrightnessMappingStrategy mCurrentBrightnessMapper;
+@@ -273,6 +277,9 @@ public class AutomaticBrightnessController {
+ 
+     private boolean mAutoBrightnessOneShot;
+ 
++    private float mLux = 0.0f;
++    private float mBackLux = 0.0f;
++
+     AutomaticBrightnessController(Callbacks callbacks, Looper looper,
+             SensorManager sensorManager, Sensor lightSensor,
+             SparseArray<BrightnessMappingStrategy> brightnessMappingStrategyMap,
+@@ -348,6 +355,7 @@ public class AutomaticBrightnessController {
+ 
+         if (!DEBUG_PRETEND_LIGHT_SENSOR_ABSENT) {
+             mLightSensor = lightSensor;
++            mBackLightSensor = getBackLightSensor();
+         }
+ 
+         mActivityTaskManager = ActivityTaskManager.getService();
+@@ -538,8 +546,11 @@ public class AutomaticBrightnessController {
+         if (mAutoBrightnessOneShot && !autoBrightnessOneShot) {
+             mSensorManager.registerListener(mLightSensorListener, mLightSensor,
+                     mCurrentLightSensorRate * 1000, mHandler);
++            mSensorManager.registerListener(mBackLightSensorListener, mBackLightSensor,
++                    mCurrentLightSensorRate * 1000, mHandler);
+         } else if (!mAutoBrightnessOneShot && autoBrightnessOneShot) {
+             mSensorManager.unregisterListener(mLightSensorListener);
++            mSensorManager.unregisterListener(mBackLightSensorListener);
+         }
+         mAutoBrightnessOneShot = autoBrightnessOneShot;
+     }
+@@ -720,6 +731,8 @@ public class AutomaticBrightnessController {
+                 registerForegroundAppUpdater();
+                 mSensorManager.registerListener(mLightSensorListener, mLightSensor,
+                         mCurrentLightSensorRate * 1000, mHandler);
++                mSensorManager.registerListener(mBackLightSensorListener, mBackLightSensor,
++                        mCurrentLightSensorRate * 1000, mHandler);
+                 return true;
+             }
+         } else if (mLightSensorEnabled) {
+@@ -737,6 +750,7 @@ public class AutomaticBrightnessController {
+             mHandler.removeMessages(MSG_UPDATE_AMBIENT_LUX);
+             unregisterForegroundAppUpdater();
+             mSensorManager.unregisterListener(mLightSensorListener);
++            mSensorManager.unregisterListener(mBackLightSensorListener);
+         }
+         return false;
+     }
+@@ -773,8 +787,11 @@ public class AutomaticBrightnessController {
+             }
+             mCurrentLightSensorRate = lightSensorRate;
+             mSensorManager.unregisterListener(mLightSensorListener);
++            mSensorManager.unregisterListener(mBackLightSensorListener);
+             mSensorManager.registerListener(mLightSensorListener, mLightSensor,
+                     lightSensorRate * 1000, mHandler);
++            mSensorManager.registerListener(mBackLightSensorListener, mBackLightSensor,
++                    lightSensorRate * 1000, mHandler);
+         }
+     }
+ 
+@@ -1042,6 +1059,7 @@ public class AutomaticBrightnessController {
+         }
+         if (mAutoBrightnessOneShot) {
+             mSensorManager.unregisterListener(mLightSensorListener);
++            mSensorManager.unregisterListener(mBackLightSensorListener);
+         }
+     }
+ 
+@@ -1393,8 +1411,24 @@ public class AutomaticBrightnessController {
+         public void onSensorChanged(SensorEvent event) {
+             if (mLightSensorEnabled) {
+                 final long time = mClock.uptimeMillis();
+-                final float lux = event.values[0];
+-                handleLightSensorEvent(time, lux);
++                mLux = event.values[0];
++                handleLightSensorEvent(time, Math.max(mLux, mBackLux));
++            }
++        }
++
++        @Override
++        public void onAccuracyChanged(Sensor sensor, int accuracy) {
++            // Not used.
++        }
++    };
++
++    private final SensorEventListener mBackLightSensorListener = new SensorEventListener() {
++        @Override
++        public void onSensorChanged(SensorEvent event) {
++            if (mLightSensorEnabled) {
++                final long time = mClock.uptimeMillis();
++                mBackLux = event.values[0];
++                handleLightSensorEvent(time, Math.max(mLux, mBackLux));
+             }
+         }
+ 
+@@ -1606,4 +1640,9 @@ public class AutomaticBrightnessController {
+             return SystemClock::uptimeMillis;
+         }
+     }
++
++    private Sensor getBackLightSensor() {
++        return SensorUtils.findSensor(mSensorManager, "xiaomi.sensor.back_lux", null,
++            SensorUtils.NO_FALLBACK);
++    }
+ }
+-- 
+2.34.1
+

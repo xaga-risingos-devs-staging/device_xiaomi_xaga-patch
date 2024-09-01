@@ -1,0 +1,29 @@
+From 2544b5a71d8c7058807a722916505b382c6b1415 Mon Sep 17 00:00:00 2001
+From: flakeforever <113103193+flakeforever@users.noreply.github.com>
+Date: Wed, 5 Jun 2024 15:21:28 +0800
+Subject: [PATCH] Battery: Fix battery time for xiaomi device
+
+---
+ services/core/java/com/android/server/BatteryService.java | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/services/core/java/com/android/server/BatteryService.java b/services/core/java/com/android/server/BatteryService.java
+index d784ea6228e7..1383f5a61657 100644
+--- a/services/core/java/com/android/server/BatteryService.java
++++ b/services/core/java/com/android/server/BatteryService.java
+@@ -583,6 +583,12 @@ public final class BatteryService extends SystemService {
+ 
+         // Let the battery stats keep track of the current level.
+         try {
++            mHealthInfo.batteryChargeCounterUah *= 1000;
++            // minutes to seconds for xiaomi device
++            if (mHealthInfo.batteryChargeTimeToFullNowSeconds < 65535) {
++                mHealthInfo.batteryChargeTimeToFullNowSeconds *= 60; 
++            }
++
+             mBatteryStats.setBatteryState(
+                     mHealthInfo.batteryStatus,
+                     mHealthInfo.batteryHealth,
+-- 
+2.34.1
+
