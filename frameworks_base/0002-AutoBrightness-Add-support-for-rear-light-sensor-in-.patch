@@ -1,7 +1,7 @@
-From 42de8bd25492aa052ab661117c873fef1b731910 Mon Sep 17 00:00:00 2001
+From ba2f8ccb8f336c4fb3d4d4829c3532b791163e3c Mon Sep 17 00:00:00 2001
 From: flakeforever <113103193+flakeforever@users.noreply.github.com>
 Date: Sun, 1 Sep 2024 14:41:39 +0800
-Subject: [PATCH] AutoBrightness: Add support for rear light sensor in
+Subject: [PATCH 3/5] AutoBrightness: Add support for rear light sensor in
  auto-brightness
 
 ---

@@ -1,0 +1,25 @@
+From 885751ad532fe77bb1316cc75cbc3f414c4b8de8 Mon Sep 17 00:00:00 2001
+From: flakeforever <113103193+flakeforever@users.noreply.github.com>
+Date: Thu, 5 Sep 2024 02:22:40 +0800
+Subject: [PATCH 2/5] Notification: Force to update notification count
+
+---
+ .../phone/LegacyNotificationIconAreaControllerImpl.java         | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/LegacyNotificationIconAreaControllerImpl.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/LegacyNotificationIconAreaControllerImpl.java
+index f8a91ee58332..ba7ae955a4b3 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/LegacyNotificationIconAreaControllerImpl.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/LegacyNotificationIconAreaControllerImpl.java
+@@ -353,7 +353,7 @@ public class LegacyNotificationIconAreaControllerImpl implements
+     }
+ 
+     private void updateNotificationIcons() {
+-        updateNotificationIcons(false);
++        updateNotificationIcons(true);
+     }
+ 
+     private void updateShelfIcons(boolean forced) {
+-- 
+2.34.1
+
