@@ -39,7 +39,7 @@ def convert_to_item(file_name):
     # Remove base_dir and patch file name, and extract the middle subdirectory
     relative_path = file_name.replace(base_dir, "").strip("/")
     subdirectory = os.path.dirname(relative_path)
-    item["subdirectory"] = subdirectory.replace("_", "/")
+    item["subdirectory"] = subdirectory.replace(",", "/")
 
     # Extract patch file name
     patch_file_name = os.path.basename(file_name)

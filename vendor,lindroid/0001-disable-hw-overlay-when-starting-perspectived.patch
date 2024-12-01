@@ -1,0 +1,24 @@
+From 9f5892dff458f7111750a98996ecc5c60211e234 Mon Sep 17 00:00:00 2001
+From: HeCheng Yu <kde-yyds@qq.com>
+Date: Sat, 30 Nov 2024 10:48:33 +0800
+Subject: [PATCH] disable hw overlay when starting perspectived
+
+---
+ perspectived/PerspectiveService.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/perspectived/PerspectiveService.cpp b/perspectived/PerspectiveService.cpp
+index 73362b9..0e73649 100644
+--- a/perspectived/PerspectiveService.cpp
++++ b/perspectived/PerspectiveService.cpp
+@@ -32,6 +32,7 @@ using aidl::vendor::lindroid::perspective::LXCContainerManager;
+ 
+ int main(void) {
+     umask(0000);
++    system("/system/bin/service call SurfaceFlinger 1008 i32 1");
+     auto perspective = ndk::SharedRefBase::make<LXCContainerManager>();
+ 
+     binder_status_t status = AServiceManager_addService(perspective->asBinder().get(), SERVICE_NAME);
+-- 
+2.47.0
+
