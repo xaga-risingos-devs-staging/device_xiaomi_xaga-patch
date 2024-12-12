@@ -1,0 +1,206 @@
+From 7287b019d19bcc9e7f1c40df317627a5a5022468 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Wed, 11 Dec 2024 19:05:55 +0800
+Subject: [PATCH] SystemUI: Blur the background of SysUI dialogs. Picked from
+ Derpfest
+
+---
+ core/res/res/values/dimens.xml                |   4 +
+ core/res/res/values/symbols.xml               |   7 +-
+ .../animation/DialogTransitionAnimator.kt     |  11 ++
+ .../com/android/systemui/util/BlurUtils.kt    | 113 ++++++++++++++++++
+ 4 files changed, 133 insertions(+), 2 deletions(-)
+ create mode 100644 packages/SystemUI/animation/src/com/android/systemui/util/BlurUtils.kt
+
+diff --git a/core/res/res/values/dimens.xml b/core/res/res/values/dimens.xml
+index 0e0652669..cd55e5dd1 100644
+--- a/core/res/res/values/dimens.xml
++++ b/core/res/res/values/dimens.xml
+@@ -1056,6 +1056,10 @@
+     <dimen name="handwriting_bounds_offset_right">10dp</dimen>
+     <dimen name="handwriting_bounds_offset_bottom">40dp</dimen>
+ 
++    <!-- Blur radius used by SystemUI -->
++    <dimen name="min_window_blur_radius">1px</dimen>
++    <dimen name="max_window_blur_radius">17.5dp</dimen>
++
+     <!-- The threshold for full back swipe progress. -->
+     <dimen name="navigation_edge_action_progress_threshold">412dp</dimen>
+     <!-- The non-linear progress interval when the screen is wider than the
+diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
+index 6e0d2460b..85f1e70ac 100644
+--- a/core/res/res/values/symbols.xml
++++ b/core/res/res/values/symbols.xml
+@@ -5542,9 +5542,12 @@
+   <java-symbol type="drawable" name="ic_zen_mode_type_schedule_time" />
+   <java-symbol type="drawable" name="ic_zen_mode_type_theater" />
+   <java-symbol type="drawable" name="ic_zen_mode_type_unknown" />
+-	  
++
++  <!-- Blur radius used by SystemUI -->
++  <java-symbol type="dimen" name="min_window_blur_radius" />
++  <java-symbol type="dimen" name="max_window_blur_radius" />
++
+   <!-- Whether to cleanup fingerprints upon connection to the daemon and when
+        user switches -->
+     <java-symbol type="bool" name="config_cleanupUnusedFingerprints" />
+-
+ </resources>
+diff --git a/packages/SystemUI/animation/src/com/android/systemui/animation/DialogTransitionAnimator.kt b/packages/SystemUI/animation/src/com/android/systemui/animation/DialogTransitionAnimator.kt
+index 9e68b2aa6..fbe7cd6b4 100644
+--- a/packages/SystemUI/animation/src/com/android/systemui/animation/DialogTransitionAnimator.kt
++++ b/packages/SystemUI/animation/src/com/android/systemui/animation/DialogTransitionAnimator.kt
+@@ -39,6 +39,7 @@ import com.android.systemui.util.maybeForceFullscreen
+ import com.android.systemui.util.registerAnimationOnBackInvoked
+ import java.util.concurrent.Executor
+ import kotlin.math.roundToInt
++import com.android.systemui.util.BlurUtils
+ 
+ private const val TAG = "DialogTransitionAnimator"
+ 
+@@ -586,6 +587,7 @@ private class AnimatedDialog(
+     private var decorViewLayoutListener: View.OnLayoutChangeListener? = null
+ 
+     private var hasInstrumentedJank = false
++    private val blurUtils = BlurUtils(dialog.context.resources)
+ 
+     fun start() {
+         val cuj = controller.cuj
+@@ -991,6 +993,15 @@ private class AnimatedDialog(
+                     if (endController is GhostedViewTransitionAnimatorController) {
+                         endController.fillGhostedViewState(endState)
+                     }
++
++                    // Blur the background
++                    blurUtils.applyBlur(
++                        viewRootImpl = decorView.viewRootImpl,
++                        radius = blurUtils.blurRadiusOfRatio(
++                            if (isLaunching) progress else 1f - progress
++                        ).toInt(),
++                        opaque = false
++                    )
+                 }
+             }
+ 
+diff --git a/packages/SystemUI/animation/src/com/android/systemui/util/BlurUtils.kt b/packages/SystemUI/animation/src/com/android/systemui/util/BlurUtils.kt
+new file mode 100644
+index 000000000..0eb6dc42d
+--- /dev/null
++++ b/packages/SystemUI/animation/src/com/android/systemui/util/BlurUtils.kt
+@@ -0,0 +1,113 @@
++/*
++ * Copyright (C) 2020 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package com.android.systemui.util
++import android.app.ActivityManager
++import android.content.res.Resources
++import android.os.SystemProperties
++import android.util.MathUtils
++import android.view.CrossWindowBlurListeners.CROSS_WINDOW_BLUR_SUPPORTED
++import android.view.SurfaceControl
++import android.view.ViewRootImpl
++import com.android.internal.R
++/**
++ * Minimal copy of com.android.systemui.statusbar.BlurUtils
++ */
++class BlurUtils(
++    private val resources: Resources,
++) {
++    val minBlurRadius = resources.getDimensionPixelSize(R.dimen.min_window_blur_radius)
++    val maxBlurRadius = resources.getDimensionPixelSize(R.dimen.max_window_blur_radius)
++    private var lastAppliedBlur = 0
++    private var earlyWakeupEnabled = false
++    /**
++     * Translates a ratio from 0 to 1 to a blur radius in pixels.
++     */
++    fun blurRadiusOfRatio(ratio: Float): Float {
++        if (ratio == 0f) {
++            return 0f
++        }
++        return MathUtils.lerp(minBlurRadius.toFloat(), maxBlurRadius.toFloat(), ratio)
++    }
++    /**
++     * Translates a blur radius in pixels to a ratio between 0 to 1.
++     */
++    fun ratioOfBlurRadius(blur: Float): Float {
++        if (blur == 0f) {
++            return 0f
++        }
++        return MathUtils.map(minBlurRadius.toFloat(), maxBlurRadius.toFloat(),
++                0f /* maxStart */, 1f /* maxStop */, blur)
++    }
++    /**
++     * This method should be called before [applyBlur] so that, if needed, we can set the
++     * early-wakeup flag in SurfaceFlinger.
++     */
++    fun prepareBlur(viewRootImpl: ViewRootImpl?, radius: Int) {
++        if (viewRootImpl == null || !viewRootImpl.surfaceControl.isValid ||
++            !supportsBlursOnWindows() || earlyWakeupEnabled
++        ) {
++            return
++        }
++        if (lastAppliedBlur == 0 && radius != 0) {
++            earlyWakeupEnabled = true
++            createTransaction().use {
++                it.setEarlyWakeupStart()
++                it.apply()
++            }
++        }
++    }
++    /**
++     * Applies background blurs to a {@link ViewRootImpl}.
++     *
++     * @param viewRootImpl The window root.
++     * @param radius blur radius in pixels.
++     * @param opaque if surface is opaque, regardless or having blurs or no.
++     */
++    fun applyBlur(viewRootImpl: ViewRootImpl?, radius: Int, opaque: Boolean) {
++        if (viewRootImpl == null || !viewRootImpl.surfaceControl.isValid) {
++            return
++        }
++        createTransaction().use {
++            if (supportsBlursOnWindows()) {
++                it.setBackgroundBlurRadius(viewRootImpl.surfaceControl, radius)
++                if (!earlyWakeupEnabled && lastAppliedBlur == 0 && radius != 0) {
++                    it.setEarlyWakeupStart()
++                    earlyWakeupEnabled = true
++                }
++                if (earlyWakeupEnabled && lastAppliedBlur != 0 && radius == 0) {
++                    it.setEarlyWakeupEnd()
++                    earlyWakeupEnabled = false
++                }
++                lastAppliedBlur = radius
++            }
++            it.setOpaque(viewRootImpl.surfaceControl, opaque)
++            it.apply()
++        }
++    }
++    fun createTransaction(): SurfaceControl.Transaction {
++        return SurfaceControl.Transaction()
++    }
++    /**
++     * If this device can render blurs.
++     *
++     * @see android.view.SurfaceControl.Transaction#setBackgroundBlurRadius(SurfaceControl, int)
++     * @return {@code true} when supported.
++     */
++    fun supportsBlursOnWindows(): Boolean {
++        return CROSS_WINDOW_BLUR_SUPPORTED && ActivityManager.isHighEndGfx() &&
++                !SystemProperties.getBoolean("persist.sysui.disableBlur", false)
++    }
++}
+-- 
+2.39.2
+
