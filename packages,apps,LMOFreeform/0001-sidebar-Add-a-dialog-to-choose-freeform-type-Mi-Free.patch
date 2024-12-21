@@ -1,0 +1,167 @@
+From 5a6c4d6ca218e085ad767a87ddb4b7d9e181b253 Mon Sep 17 00:00:00 2001
+From: HeCheng Yu <kde-yyds@qq.com>
+Date: Sat, 21 Dec 2024 22:07:22 +0800
+Subject: [PATCH] sidebar: Add a dialog to choose freeform type (Mi-Freeform or
+ Native freeform)
+
+---
+ sidebar/app/src/main/AndroidManifest.xml      |  2 +-
+ .../sidebar/service/SidebarView.kt            | 43 ++++++++++++++++++-
+ .../sidebar/ui/all_app/AllAppActivity.kt      | 41 ++++++++++++++++++
+ 3 files changed, 84 insertions(+), 2 deletions(-)
+
+diff --git a/sidebar/app/src/main/AndroidManifest.xml b/sidebar/app/src/main/AndroidManifest.xml
+index ac95b6e..4219855 100644
+--- a/sidebar/app/src/main/AndroidManifest.xml
++++ b/sidebar/app/src/main/AndroidManifest.xml
+@@ -9,7 +9,7 @@
+     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+         tools:ignore="QueryAllPackagesPermission" />
+     <uses-permission android:name="com.crdroid.permission.START_FREEFORM" />
+-
++    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+     <application
+         android:name=".app.SidebarApplication"
+         android:persistent="true"
+diff --git a/sidebar/app/src/main/java/com/libremobileos/sidebar/service/SidebarView.kt b/sidebar/app/src/main/java/com/libremobileos/sidebar/service/SidebarView.kt
+index 2b206f9..8481408 100644
+--- a/sidebar/app/src/main/java/com/libremobileos/sidebar/service/SidebarView.kt
++++ b/sidebar/app/src/main/java/com/libremobileos/sidebar/service/SidebarView.kt
+@@ -10,6 +10,9 @@ import android.view.MotionEvent
+ import android.view.View
+ import android.view.WindowManager
+ import android.view.WindowManager.LayoutParams
++import android.app.AlertDialog
++import android.app.ActivityOptions
++import android.graphics.Rect
+ import androidx.compose.foundation.layout.fillMaxHeight
+ import androidx.compose.foundation.layout.wrapContentWidth
+ import androidx.compose.ui.Modifier
+@@ -26,6 +29,7 @@ import com.libremobileos.sidebar.bean.AppInfo
+ import com.libremobileos.sidebar.ui.theme.SidebarTheme
+ import com.libremobileos.sidebar.utils.Logger
+ import kotlin.math.roundToInt
++import java.lang.reflect.Method
+ 
+ /**
+  * @author KindBrave
+@@ -67,6 +71,28 @@ class SidebarView(
+     }
+ 
+     private fun onClick(appInfo: AppInfo) {
++        showFreeformModeDialog(appInfo)
++        removeView()
++    }
++
++    private fun showFreeformModeDialog(appInfo: AppInfo) {
++        val options = arrayOf("MI-Freeform", "Native Freeform")
++
++        val builder = AlertDialog.Builder(context)
++        builder.setTitle("Choose Freeform Mode")
++        .setItems(options) { _, which ->
++            when (which) {
++                0 -> launchMiFreeform(appInfo)
++                1 -> launchNativeFreeform(appInfo)
++            }
++        }
++
++        val dialog = builder.create()
++        dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
++        dialog.show()
++    }
++
++    private fun launchMiFreeform(appInfo: AppInfo) {
+         val intent = Intent(ACTION).apply {
+             setPackage(PACKAGE)
+             putExtra("packageName", appInfo.packageName)
+@@ -74,7 +100,22 @@ class SidebarView(
+             putExtra("userId", appInfo.userId)
+         }
+         context.sendBroadcastAsUser(intent, UserHandle(UserHandle.USER_CURRENT))
+-        removeView()
++    }
++
++    private fun launchNativeFreeform(appInfo: AppInfo) {
++        val intent = context.packageManager.getLaunchIntentForPackage(appInfo.packageName)?.apply {
++            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
++            addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
++            addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
++        }
++        val options = ActivityOptions.makeBasic()
++        try {
++            val setLaunchWindowingModeMethod: Method = ActivityOptions::class.java.getMethod("setLaunchWindowingMode", Int::class.javaPrimitiveType)
++            setLaunchWindowingModeMethod.invoke(options, 5) // 5 is the value for WINDOWING_MODE_FREEFORM
++        } catch (e: Exception) {
++            e.printStackTrace()
++        }
++        context.startActivity(intent, options.toBundle())
+     }
+ 
+     @SuppressLint("ClickableViewAccessibility")
+diff --git a/sidebar/app/src/main/java/com/libremobileos/sidebar/ui/all_app/AllAppActivity.kt b/sidebar/app/src/main/java/com/libremobileos/sidebar/ui/all_app/AllAppActivity.kt
+index dd2abdf..0ea7ad2 100644
+--- a/sidebar/app/src/main/java/com/libremobileos/sidebar/ui/all_app/AllAppActivity.kt
++++ b/sidebar/app/src/main/java/com/libremobileos/sidebar/ui/all_app/AllAppActivity.kt
+@@ -10,6 +10,10 @@ import androidx.compose.ui.Modifier
+ import com.libremobileos.sidebar.bean.AppInfo
+ import com.libremobileos.sidebar.ui.theme.SidebarTheme
+ import com.libremobileos.sidebar.utils.Logger
++import android.app.AlertDialog
++import android.app.ActivityOptions
++import android.graphics.Rect
++import java.lang.reflect.Method
+ 
+ /**
+  * @author KindBrave
+@@ -46,6 +50,26 @@ class AllAppActivity: ComponentActivity() {
+     }
+ 
+     private fun onClick(appInfo: AppInfo) {
++        showFreeformModeDialog(appInfo)
++    }
++
++    private fun showFreeformModeDialog(appInfo: AppInfo) {
++        val options = arrayOf("MI-Freeform", "Native Freeform")
++
++        val builder = AlertDialog.Builder(this)
++        builder.setTitle("Choose Freeform Mode")
++        .setItems(options) { _, which ->
++            when (which) {
++                0 -> launchMiFreeform(appInfo)
++                1 -> launchNativeFreeform(appInfo)
++            }
++        }
++
++        val dialog = builder.create()
++        dialog.show()
++    }
++
++    private fun launchMiFreeform(appInfo: AppInfo) {
+         val intent = Intent(ACTION).apply {
+             setPackage(PACKAGE)
+             putExtra("packageName", appInfo.packageName)
+@@ -55,4 +79,21 @@ class AllAppActivity: ComponentActivity() {
+         sendBroadcast(intent)
+         finish()
+     }
++
++    private fun launchNativeFreeform(appInfo: AppInfo) {
++        val intent = packageManager.getLaunchIntentForPackage(appInfo.packageName)?.apply {
++            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
++            addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
++            addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
++        }
++        val options = ActivityOptions.makeBasic()
++        try {
++            val setLaunchWindowingModeMethod: Method = ActivityOptions::class.java.getMethod("setLaunchWindowingMode", Int::class.javaPrimitiveType)
++            setLaunchWindowingModeMethod.invoke(options, 5) // 5 is the value for WINDOWING_MODE_FREEFORM
++        } catch (e: Exception) {
++            e.printStackTrace()
++        }
++        startActivity(intent, options.toBundle())
++        finish()
++    }
+ }
+-- 
+2.47.0
+
