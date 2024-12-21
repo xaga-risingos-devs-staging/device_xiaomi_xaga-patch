@@ -1,0 +1,26 @@
+From 678f683080fd5377a144129d0a161db8a2613133 Mon Sep 17 00:00:00 2001
+From: HeCheng Yu <kde-yyds@qq.com>
+Date: Sat, 21 Dec 2024 10:48:04 +0800
+Subject: [PATCH] Revert "Launcher3: Disable native freeform task shortcut"
+
+This reverts commit f9220b1a242da0125d05a9a7a9dc4ef40d46d175.
+---
+ quickstep/src/com/android/quickstep/TaskShortcutFactory.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/quickstep/src/com/android/quickstep/TaskShortcutFactory.java b/quickstep/src/com/android/quickstep/TaskShortcutFactory.java
+index 2583faf1e6..69b045e33c 100644
+--- a/quickstep/src/com/android/quickstep/TaskShortcutFactory.java
++++ b/quickstep/src/com/android/quickstep/TaskShortcutFactory.java
+@@ -440,7 +440,7 @@ public interface TaskShortcutFactory {
+         }
+ 
+         private boolean isAvailable(RecentsViewContainer container) {
+-            return false;
++            return !enableDesktopWindowingMode();
+         }
+     };
+ 
+-- 
+2.47.0
+
