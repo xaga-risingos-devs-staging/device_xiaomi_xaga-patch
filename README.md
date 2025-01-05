@@ -23,7 +23,7 @@ git clone --depth=1 https://github.com/flakeforever/device_xiaomi_mondrian devic
 git clone --depth=1 https://github.com/flakeforever/device_xiaomi_mondrian-kernel device/xiaomi/mondrian-kernel
 git clone --depth=1 https://github.com/flakeforever/kernel_xiaomi_sm8475 kernel/xiaomi/sm8475
 git clone --depth=1 https://github.com/flakeforever/vendor_xiaomi_mondrian vendor/xiaomi/mondrian
-git clone --depth=1 https://GitHub.com/AOSPA/android_device_qcom_common device/qcom/common --branch=uvite
+git clone --depth=1 https://github.com/AOSPA/android_device_qcom_common device/qcom/common --branch=uvite
 git clone --depth=1 https://github.com/flakeforever/device_xiaomi_sepolicy device/xiaomi/sepolicy
 git clone --depth=1 https://github.com/flakeforever/hardware_xiaomi hardware/xiaomi
 ```
@@ -31,7 +31,7 @@ git clone --depth=1 https://github.com/flakeforever/hardware_xiaomi hardware/xia
 ```
 git clone --depth=1 https://github.com/Linux-on-droid/vendor_lindroid vendor/lindroid
 git clone --depth=1 https://github.com/Linux-on-droid/libhybris libhybris
-git clone --depth=1 https://github.com/Linux-on-droid/external_lxc external/lxc
+git clone --depth=1 https://github.com/Linux-on-droid/external_lxc external/lxc --branch=lindroid-22.1
 ```
 #### Patches
 ```

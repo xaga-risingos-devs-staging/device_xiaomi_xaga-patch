@@ -1,33 +1,31 @@
-From a3dbe814e4093cc3f001965da9c4777f9bdac4bf Mon Sep 17 00:00:00 2001
-From: Hecheng Yu <kde-yyds@qq.com>
-Date: Wed, 4 Dec 2024 21:35:35 +0800
+From b5ac2742996fae7db18111309fed31911ca22f9c Mon Sep 17 00:00:00 2001
+From: HeCheng Yu <kde-yyds@qq.com>
+Date: Sun, 5 Jan 2025 14:41:55 +0800
 Subject: [PATCH] Implement blur animation at app launch
 
+Change-Id: Ie32efb615b3f5fcd0f47c7d221818aad4f28a715
 ---
- .../launcher3/QuickstepTransitionManager.java | 113 +++++++++++++++++-
- 1 file changed, 109 insertions(+), 4 deletions(-)
+ .../launcher3/QuickstepTransitionManager.java | 92 ++++++++++++++++++-
+ 1 file changed, 91 insertions(+), 1 deletion(-)
 
 diff --git a/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java b/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java
-index 540a13f..95b3437 100644
+index a64936d..08e9a9a 100644
 --- a/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java
 +++ b/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java
-@@ -169,12 +169,26 @@ import com.android.systemui.shared.system.BlurUtils;
- import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
- import com.android.systemui.shared.system.QuickStepContract;
- import com.android.wm.shell.startingsurface.IStartingWindowListener;
-+import android.view.animation.Interpolator;
- 
- import java.io.PrintWriter;
- import java.lang.ref.WeakReference;
- import java.util.ArrayList;
- import java.util.LinkedHashMap;
- import java.util.List;
+@@ -111,6 +111,8 @@ import android.view.animation.PathInterpolator;
+ import android.window.RemoteTransition;
+ import android.window.TransitionFilter;
+ import android.window.WindowAnimationState;
 +import android.graphics.RenderEffect;
 +import android.graphics.Shader;
-+import android.os.Build;
-+import android.widget.FrameLayout;
-+import android.view.View;
-+import android.view.ViewGroup;
+ 
+ import androidx.annotation.NonNull;
+ import androidx.annotation.Nullable;
+@@ -174,6 +176,17 @@ import java.util.Collections;
+ import java.util.LinkedHashMap;
+ import java.util.List;
+ 
++
 +
 +class ExponentialEaseOutInterpolator implements Interpolator {
 +    @Override
@@ -35,146 +33,105 @@ index 540a13f..95b3437 100644
 +        return (float) (1 - Math.pow(2, -10 * input));
 +    }
 +}
- 
++
++
++
  /**
   * Manages the opening and closing app transitions from Launcher
-@@ -911,7 +925,11 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
- 
-         // If app targets are translucent, do not animate the background as it causes a visible
-         // flicker when it resets itself at the end of its animation.
--        animatorSet.play(appAnimator);
-+        if (appTargetsAreTranslucent || !launcherClosing) {
-+            animatorSet.play(appAnimator);
-+        } else {
-+            animatorSet.playTogether(appAnimator, getBackgroundAnimator());
-+        }
-         return animatorSet;
-     }
- 
-@@ -1047,13 +1065,18 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
- 
-         // If app targets are translucent, do not animate the background as it causes a visible
-         // flicker when it resets itself at the end of its animation.
--        animatorSet.play(appAnimator);
-+        if (appTargetsAreTranslucent || !launcherClosing) {
-+            animatorSet.play(appAnimator);
-+        } else {
-+            animatorSet.playTogether(appAnimator, getBackgroundAnimator());
-+        }
-         return animatorSet;
-     }
- 
+  */
+@@ -1047,7 +1060,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
      /**
       * Returns animator that controls depth/blur of the background.
       */
-+/*
-     private ObjectAnimator getBackgroundAnimator() {
+-    private ObjectAnimator getBackgroundAnimator() {
++/*    private ObjectAnimator getBackgroundAnimator() {
          // When launching an app from overview that doesn't map to a task, we still want to just
          // blur the wallpaper instead of the launcher surface as well
-@@ -1097,11 +1120,89 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
+         boolean allowBlurringLauncher = mLauncher.getStateManager().getState() != OVERVIEW
+@@ -1089,6 +1102,83 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
+                     depthController.dispose();
                  }));
  
-         return backgroundRadiusAnim;
--    }
++        return backgroundRadiusAnim;
 +    }*/
- 
-     /**
-      * Registers remote animations used when closing apps to home screen.
-      */
-+private ObjectAnimator getBackgroundAnimator() {
-+    boolean allowBlurringLauncher = mLauncher.getStateManager().getState() != OVERVIEW
-+            && BlurUtils.supportsBlursOnWindows();
++    private ObjectAnimator getBackgroundAnimator() {
++        boolean allowBlurringLauncher = mLauncher.getStateManager().getState() != OVERVIEW
++                && BlurUtils.supportsBlursOnWindows();
 +
-+    LaunchDepthController depthController = new LaunchDepthController(mLauncher);
-+    ObjectAnimator backgroundRadiusAnim = ObjectAnimator.ofFloat(depthController.stateDepth,
-+                    MULTI_PROPERTY_VALUE, BACKGROUND_APP.getDepth(mLauncher))
-+            .setDuration(APP_LAUNCH_DURATION);
++        LaunchDepthController depthController = new LaunchDepthController(mLauncher);
++        ObjectAnimator backgroundRadiusAnim = ObjectAnimator.ofFloat(depthController.stateDepth,
++                        MULTI_PROPERTY_VALUE, BACKGROUND_APP.getDepth(mLauncher))
++                .setDuration(APP_LAUNCH_DURATION);
 +
-+    if (allowBlurringLauncher) {
-+        View rootView = mLauncher.getDragLayer();
++        if (allowBlurringLauncher) {
++            View rootView = mLauncher.getDragLayer();
 +
-+        // Create a composite SurfaceControl layer for everything behind the app animation
-+        ViewRootImpl viewRootImpl = rootView.getViewRootImpl();
-+        SurfaceControl parentSurface = viewRootImpl != null ? viewRootImpl.getSurfaceControl() : null;
++            // Create a composite SurfaceControl layer for everything behind the app animation
++            ViewRootImpl viewRootImpl = rootView.getViewRootImpl();
++            SurfaceControl parentSurface = viewRootImpl != null ? viewRootImpl.getSurfaceControl() : null;
 +
-+        if (parentSurface != null) {
-+            SurfaceControl blurLayer = new SurfaceControl.Builder()
-+                    .setName("Blur Layer")
-+                    .setParent(parentSurface)
-+                    .setOpaque(false)
-+                    .setEffectLayer()
-+                    .build();
++            if (parentSurface != null) {
++                SurfaceControl blurLayer = new SurfaceControl.Builder()
++                        .setName("Blur Layer")
++                        .setParent(parentSurface)
++                        .setOpaque(false)
++                        .setEffectLayer()
++                        .build();
 +
-+            SurfaceControl.Transaction transaction = new SurfaceControl.Transaction();
++                SurfaceControl.Transaction transaction = new SurfaceControl.Transaction();
 +
-+            // Create an animator for the blur effect
-+            backgroundRadiusAnim.addUpdateListener(animation -> {
++                // Create an animator for the blur effect
++                backgroundRadiusAnim.addUpdateListener(animation -> {
 +
-+        if (mLauncher.getStateManager().getState() == LauncherState.ALL_APPS) {
-+            return;
-+        }
-+                float animatedValue = (float) animation.getAnimatedValue();
-+                float blurRadius = Math.min(100f, animatedValue * 100f); // Scale blur with animation progress
++            if (mLauncher.getStateManager().getState() == LauncherState.ALL_APPS) {
++                return;
++            }
++                    float animatedValue = (float) animation.getAnimatedValue();
++                    float blurRadius = Math.min(100f, animatedValue * 100f); // Scale blur with animation progress
 +
-+                // Dynamically update blur radius
-+                if (blurLayer != null && blurLayer.isValid()) {
-+                    transaction.setBackgroundBlurRadius(blurLayer, (int) blurRadius);
-+                    transaction.setAlpha(blurLayer, 1f);
-+                    transaction.show(blurLayer);
-+                    transaction.apply();
-+                }
-+            });
-+
-+            backgroundRadiusAnim.setInterpolator(new ExponentialEaseOutInterpolator());
-+
-+            // Cleanup on animation end or cancel
-+            backgroundRadiusAnim.addListener(new AnimatorListenerAdapter() {
-+                @Override
-+                public void onAnimationEnd(Animator animation) {
-+                    cleanupBlurLayer(blurLayer, transaction);
-+                }
-+
-+                @Override
-+                public void onAnimationCancel(Animator animation) {
-+                    cleanupBlurLayer(blurLayer, transaction);
-+                }
-+
-+                private void cleanupBlurLayer(SurfaceControl blurLayer, SurfaceControl.Transaction transaction) {
++                    // Dynamically update blur radius
 +                    if (blurLayer != null && blurLayer.isValid()) {
-+                        transaction.remove(blurLayer).apply();
-+                        blurLayer.release(); // Release the SurfaceControl to avoid leaks
++                        transaction.setBackgroundBlurRadius(blurLayer, (int) blurRadius);
++                        transaction.setAlpha(blurLayer, 1f);
++                        transaction.show(blurLayer);
++                        transaction.apply();
 +                    }
-+                }
-+            });
++                });
++
++                backgroundRadiusAnim.setInterpolator(new ExponentialEaseOutInterpolator());
++
++                // Cleanup on animation end or cancel
++                backgroundRadiusAnim.addListener(new AnimatorListenerAdapter() {
++                    @Override
++                    public void onAnimationEnd(Animator animation) {
++                        cleanupBlurLayer(blurLayer, transaction);
++                    }
++
++                    @Override
++                    public void onAnimationCancel(Animator animation) {
++                        cleanupBlurLayer(blurLayer, transaction);
++                    }
++
++                    private void cleanupBlurLayer(SurfaceControl blurLayer, SurfaceControl.Transaction transaction) {
++                        if (blurLayer != null && blurLayer.isValid()) {
++                            transaction.remove(blurLayer).apply();
++                            blurLayer.release(); // Release the SurfaceControl to avoid leaks
++                        }
++                    }
++                });
++            }
 +        }
-+    }
 +
-+    backgroundRadiusAnim.addListener(
-+            AnimatorListeners.forEndCallback(() -> {
-+                depthController.stateDepth
-+                        .setValue(mLauncher.getDepthController().stateDepth.getValue());
-+                depthController.dispose();
-+            }));
++        backgroundRadiusAnim.addListener(
++                AnimatorListeners.forEndCallback(() -> {
++                    depthController.stateDepth
++                            .setValue(mLauncher.getDepthController().stateDepth.getValue());
++                    depthController.dispose();
++                }));
 +
-+    return backgroundRadiusAnim;
-+}
-+
-     public void registerRemoteAnimations() {
-         if (SEPARATE_RECENTS_ACTIVITY.get()) {
-             return;
-@@ -1651,7 +1752,11 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
-                     anim.play(new StaggeredWorkspaceAnim(mLauncher, velocity.y,
-                             true /* animateOverviewScrim */, launcherView).getAnimators());
-                 }
--
-+                if (!areAllTargetsTranslucent(appTargets)) {
-+                    anim.play(ObjectAnimator.ofFloat(mLauncher.getDepthController().stateDepth,
-+                            MULTI_PROPERTY_VALUE,
-+                            BACKGROUND_APP.getDepth(mLauncher), NORMAL.getDepth(mLauncher)));
-+                }
-                 // We play StaggeredWorkspaceAnim as a part of the closing window animation.
-                 playWorkspaceReveal = false;
-             }
+         return backgroundRadiusAnim;
+     }
+ 
 -- 
-2.39.2
+2.47.0
 
