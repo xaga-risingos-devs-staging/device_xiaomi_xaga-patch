@@ -1,35 +1,35 @@
-From ae04146464fff7453fc0e192d2c779572d123c94 Mon Sep 17 00:00:00 2001
-From: HeCheng Yu <kde-yyds@qq.com>
-Date: Sat, 4 Jan 2025 19:36:06 +0800
-Subject: [PATCH] Add simple FEAS support
+From e3a4b57e42e58c1e22aac9e2bef1e39f94b5e961 Mon Sep 17 00:00:00 2001
+From: YuKongA <1348547200@qq.com>
+Date: Thu, 7 Sep 2023 22:36:33 +0900
+Subject: [PATCH] [PATCH] Add simple FEAS support
 
+Change-Id: I80871bc38df86f76135fcd8bf32f0fe2b3aa98da
 ---
- libs/gui/Surface.cpp | 175 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 175 insertions(+)
+ libs/gui/Surface.cpp | 188 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 188 insertions(+)
 
 diff --git a/libs/gui/Surface.cpp b/libs/gui/Surface.cpp
-index 97d4ab9..711ade8 100644
+index 66e7ddd915..6473ec0035 100644
 --- a/libs/gui/Surface.cpp
 +++ b/libs/gui/Surface.cpp
-@@ -53,6 +53,13 @@
+@@ -53,6 +53,11 @@
  
  #include <com_android_graphics_libgui_flags.h>
  
-+
 +#include <string>
 +#include <sys/ioctl.h>
 +#include <fcntl.h>
 +#include <android-base/properties.h>
 +
-+
  namespace android {
  
  using namespace com::android::graphics::libgui;
-@@ -93,6 +100,159 @@ void Surface::ProducerDeathListenerProxy::binderDied(const wp<IBinder>&) {
- }
- #endif // COM_ANDROID_GRAPHICS_LIBGUI_FLAGS(WB_PLATFORM_API_IMPROVEMENTS)
+@@ -77,6 +82,178 @@ bool isInterceptorRegistrationOp(int op) {
+ 
+ } // namespace
  
 +namespace {
++
 +typedef struct _FEAS_BUFFER_PACKAGE {
 +    __u32 pid;
 +    union {
@@ -44,12 +44,17 @@ index 97d4ab9..711ade8 100644
 +    __s32 queue_SF;
 +    __u64 identifier;
 +} FEAS_BUFFER_PACKAGE;
++
 +#define FEAS_QUEUE_BEG    _IOW('g', 1, FEAS_BUFFER_PACKAGE)
 +#define FEAS_CONNECT      _IOW('g', 15, FEAS_BUFFER_PACKAGE)
++
 +#define ALOGTI(TAG_NAME, ...) do{((void)ALOG(LOG_INFO, TAG_NAME, __VA_ARGS__));}while(0)
 +#define ALOGTD(TAG_NAME, ...) do{((void)ALOG(LOG_DEBUG, TAG_NAME, __VA_ARGS__));}while(0)
++
 +#define FEAS_IOCTL_PATH   "/proc/perfmgr/perf_ioctl"
++
 +static Mutex mFEASMutex;
++
 +int mFEASDevFd = -1;
 +inline static bool checkFEASDev() {
 +    if (mFEASDevFd >= 0) {
@@ -66,6 +71,7 @@ index 97d4ab9..711ade8 100644
 +    }
 +    return false;
 +}
++
 +static inline void getProcessNameByPid(int pid, std::string &processName) {
 +    char buf[64] = {0};
 +    const char *statusPath = "/proc/%d/status";
@@ -82,6 +88,7 @@ index 97d4ab9..711ade8 100644
 +        fclose(file);
 +    }
 +}
++
 +inline static void getProcessNameByPid2(int pid, std::string &processName) {
 +    char buf[64] = {0};
 +    int cnt = 0;
@@ -98,6 +105,7 @@ index 97d4ab9..711ade8 100644
 +	fclose(file);
 +    }
 +}
++
 +bool mFEASInitialized = false;
 +bool mFEASEnable = false;
 +static bool checkFEASEnable() {
@@ -110,7 +118,14 @@ index 97d4ab9..711ade8 100644
 +        const char *processNameCStr = processName.c_str();
 +        if (strncmp(processNameCStr, "surfaceflinger", 14) == 0 ||
 +                strncmp(processNameCStr, "com.android.systemui", 20) == 0 ||
++                strncmp(processNameCStr, "com.tencent.mobileqq", 20) == 0 ||
++                strncmp(processNameCStr, "com.tencent.mm", 14) == 0 ||
++                strncmp(processNameCStr, "com.tencent.qqmusic", 19) == 0 ||
++                strncmp(processNameCStr, "com.taobao.", 11) == 0 ||
 +                strncmp(processNameCStr, "com.eg.android.AlipayGphone", 27) == 0 ||
++                strncmp(processNameCStr, "com.jingdong", 12) == 0 ||
++                strncmp(processNameCStr, "com.jd.", 7) == 0 ||
++                strncmp(processNameCStr, "tv.danmaku.bili", 15) == 0 ||
 +                strncmp(processNameCStr, "com.bilibili.app.in", 19) == 0 ||
 +                strncmp(processNameCStr, "org.telegram.messenger", 22) == 0 ||
 +                strncmp(processNameCStr, "com.baidu.", 10) == 0 ||
@@ -125,6 +140,7 @@ index 97d4ab9..711ade8 100644
 +    mFEASInitialized = true;
 +    return mFEASEnable;
 +}
++
 +inline static void feasConnect(const int32_t& api, const uint64_t& identifier) {
 +    FEAS_BUFFER_PACKAGE msg;
 +    Mutex::Autolock lock(mFEASMutex);
@@ -143,6 +159,7 @@ index 97d4ab9..711ade8 100644
 +    }
 +    */
 +}
++
 +inline static void feasQueueBEG(const uint64_t& identifier) {
 +    FEAS_BUFFER_PACKAGE msg;
 +    Mutex::Autolock lock(mFEASMutex);
@@ -161,6 +178,7 @@ index 97d4ab9..711ade8 100644
 +    }
 +    */
 +}
++
 +inline static void feasDisconnect(const uint64_t& identifier) {
 +    FEAS_BUFFER_PACKAGE msg;
 +    Mutex::Autolock lock(mFEASMutex);
@@ -179,13 +197,13 @@ index 97d4ab9..711ade8 100644
 +    }
 +    */
 +}
++
 +} // namespace
 +
-+
- Surface::Surface(const sp<IGraphicBufferProducer>& bufferProducer, bool controlledByApp,
-                  const sp<IBinder>& surfaceControlHandle)
-       : mGraphicBufferProducer(bufferProducer),
-@@ -1333,6 +1493,10 @@ int Surface::queueBuffer(android_native_buffer_t* buffer, int fenceFd) {
+ #if COM_ANDROID_GRAPHICS_LIBGUI_FLAGS(WB_PLATFORM_API_IMPROVEMENTS)
+ Surface::ProducerDeathListenerProxy::ProducerDeathListenerProxy(wp<SurfaceListener> surfaceListener)
+       : mSurfaceListener(surfaceListener) {}
+@@ -1333,6 +1510,10 @@ int Surface::queueBuffer(android_native_buffer_t* buffer, int fenceFd) {
      ALOGV("Surface::queueBuffer");
      Mutex::Autolock lock(mMutex);
  
@@ -196,28 +214,24 @@ index 97d4ab9..711ade8 100644
      int i = getSlotFromBufferLocked(buffer);
      if (i < 0) {
          if (fenceFd >= 0) {
-@@ -2124,6 +2288,12 @@ int Surface::connect(int api, const sp<SurfaceListener>& listener, bool reportBu
+@@ -2120,6 +2301,10 @@ int Surface::connect(int api, const sp<SurfaceListener>& listener, bool reportBu
          mDirtyRegion = Region::INVALID_REGION;
      }
  
-+
 +    if (checkFEASEnable()) {
 +        feasConnect(api, static_cast<uint64_t>(reinterpret_cast<intptr_t>(this)));
 +    }
 +
-+
      return err;
  }
  
-@@ -2714,6 +2884,11 @@ status_t Surface::lock(
-             outBuffer->bits   = vaddr;
-         }
+@@ -2158,6 +2343,9 @@ int Surface::disconnect(int api, IGraphicBufferProducer::DisconnectMode mode) {
      }
-+
+ #endif // COM_ANDROID_GRAPHICS_LIBGUI_FLAGS(WB_PLATFORM_API_IMPROVEMENTS)
+ 
 +    if (checkFEASEnable()) {
 +       feasDisconnect(static_cast<uint64_t>(reinterpret_cast<intptr_t>(this)));
 +    }
-+
      return err;
  }
  
