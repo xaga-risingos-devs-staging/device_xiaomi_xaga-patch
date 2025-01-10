@@ -17,7 +17,7 @@ index 2583faf1e6..69b045e33c 100644
  
          private boolean isAvailable(RecentsViewContainer container) {
 -            return false;
-+            return trueS;
++            return true;
          }
      };
  
