@@ -2,7 +2,7 @@
 ## Preparation 
 ### OS
 Make sure you have a GNU/Linux environment. Debian and Ubuntu are recommended.  
-If you are using Arch Linux, you will encounter errors during build. Chroot into a Debian or Ubuntu rootfs (or other containers like lxc).
+If you are using Arch Linux, you will encounter errors when building kernel. See the guide below to fix it.
 ### Hardware
 You need a high performance computer. The most important thing is RAM. At least 16GB RAM is required to build smoothly.
 Be sure to enable enough swap if you have a small RAM.
@@ -42,6 +42,13 @@ git clone --depth=1 https://github.com/kde-yyds/device_xiaomi_mondrian-patch/
 python3 device_xiaomi_mondrian-patch/apply-patches.py
 ```
 Apply what you need. Maybe not all patches are required.
+### Fix errors for Arch Linux
+When building android kernel on Arch Linux, `libyaml` cannot be found and configured correctly. Copy the header and lib to `prebuilts/kernel-build-tools` manually to fix it. (Thanks to [@Finish0314](https://github.com/finish0314) for this workaround)
+```
+cp -r /usr/include/yaml.h prebuilts/kernel-build-tools/linux-x86/include/yaml.h
+cp -r /lib64/libyaml-0.so.2.0.9 prebuilts/kernel-build-tools/linux-x86/lib64/libyaml.so
+```
+
 ### Build RisingOS
 Switch to bash if you are not on it.
 ```
