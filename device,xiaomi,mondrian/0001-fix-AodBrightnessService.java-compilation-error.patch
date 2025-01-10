@@ -1,7 +1,7 @@
-From 56b1a771d7f42ed372664b1b510a6c943d12c18b Mon Sep 17 00:00:00 2001
-From: Hecheng Yu <kde-yyds@qq.com>
-Date: Fri, 29 Nov 2024 15:12:39 +0800
-Subject: [PATCH] fix AodBrightnessService.java complication error
+From 50539e6d6227fcc8169f61b60100a48f49da138a Mon Sep 17 00:00:00 2001
+From: HeCheng Yu <kde-yyds@qq.com>
+Date: Fri, 10 Jan 2025 22:36:51 +0800
+Subject: [PATCH] fix AodBrightnessService.java compilation error
 
 ---
  .../settings/doze/AodBrightnessService.java   | 120 +++++++++---------
@@ -211,5 +211,5 @@ index 3e76310..425ceea 100644
 +    }
 +}
 -- 
-2.39.2
+2.47.0
 
