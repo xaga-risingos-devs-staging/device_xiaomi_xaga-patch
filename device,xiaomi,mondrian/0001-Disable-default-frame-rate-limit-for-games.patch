@@ -1,0 +1,23 @@
+From 8b71f9224a0f5f9a07ad524e85d1708fc8a8f05d Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Thu, 5 Dec 2024 21:23:14 +0800
+Subject: [PATCH] Disable default frame rate limit for games
+
+---
+ configs/properties/system.prop | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/configs/properties/system.prop b/configs/properties/system.prop
+index f2dbb74..7c0c8fe 100644
+--- a/configs/properties/system.prop
++++ b/configs/properties/system.prop
+@@ -58,3 +58,6 @@ ro.hardware.wlan.vendor=qcom
+ 
+ # Xiaomi
+ ro.product.mod_device=mondrian
++
++# Disable default frame rate limit for games
++debug.graphics.game_default_frame_rate.disabled=1
+-- 
+2.39.2
+
