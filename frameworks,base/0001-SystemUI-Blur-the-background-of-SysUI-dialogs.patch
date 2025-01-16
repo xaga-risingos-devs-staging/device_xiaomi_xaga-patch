@@ -1,49 +1,50 @@
-From 0673723c5962f30d403b9f36d054cdfb4688eacc Mon Sep 17 00:00:00 2001
-From: Hecheng Yu <kde-yyds@qq.com>
-Date: Wed, 11 Dec 2024 19:05:55 +0800
-Subject: [PATCH] SystemUI: Blur the background of SysUI dialogs. Picked from
- Derpfest
+From 2f2116668e79fe7a596d41b5b2fd3bb76cca297a Mon Sep 17 00:00:00 2001
+From: Adithya R <gh0strider.2k18.reborn@gmail.com>
+Date: Thu, 16 Jan 2025 18:48:32 +0800
+Subject: [PATCH] SystemUI: Blur the background of SysUI dialogs
 
 ---
- core/res/res/values/dimens.xml                |    4 +
- core/res/res/values/symbols.xml               |    6 +
- .../animation/DialogTransitionAnimator.kt     |   11 +
- .../DialogTransitionAnimator.kt.orig          | 1088 +++++++++++++++++
- .../com/android/systemui/util/BlurUtils.kt    |  113 ++
- 5 files changed, 1222 insertions(+)
- create mode 100644 packages/SystemUI/animation/src/com/android/systemui/animation/DialogTransitionAnimator.kt.orig
+ core/res/res/values/derp_dimens.xml           |  10 ++
+ core/res/res/values/derp_symbols.xml          |  10 ++
+ .../animation/DialogTransitionAnimator.kt     |  11 ++
+ .../com/android/systemui/util/BlurUtils.kt    | 113 ++++++++++++++++++
+ 4 files changed, 144 insertions(+)
+ create mode 100644 core/res/res/values/derp_dimens.xml
+ create mode 100644 core/res/res/values/derp_symbols.xml
  create mode 100644 packages/SystemUI/animation/src/com/android/systemui/util/BlurUtils.kt
 
-diff --git a/core/res/res/values/dimens.xml b/core/res/res/values/dimens.xml
-index e2e48721c..6b946cfc8 100644
---- a/core/res/res/values/dimens.xml
-+++ b/core/res/res/values/dimens.xml
-@@ -1060,6 +1060,10 @@
-     <dimen name="handwriting_bounds_offset_right">10dp</dimen>
-     <dimen name="handwriting_bounds_offset_bottom">40dp</dimen>
- 
+diff --git a/core/res/res/values/derp_dimens.xml b/core/res/res/values/derp_dimens.xml
+new file mode 100644
+index 000000000..f2578f083
+--- /dev/null
++++ b/core/res/res/values/derp_dimens.xml
+@@ -0,0 +1,10 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++Copyright (C) 2024 DerpFest
++SPDX-License-Identifier: Apache-2.0
++-->
++<resources>
 +    <!-- Blur radius used by SystemUI -->
 +    <dimen name="min_window_blur_radius">1px</dimen>
 +    <dimen name="max_window_blur_radius">17.5dp</dimen>
-+
-     <!-- The threshold for full back swipe progress. -->
-     <dimen name="navigation_edge_action_progress_threshold">412dp</dimen>
-     <!-- The non-linear progress interval when the screen is wider than the
-diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
-index 20db15373..2493e154c 100644
---- a/core/res/res/values/symbols.xml
-+++ b/core/res/res/values/symbols.xml
-@@ -5630,4 +5630,10 @@
-   <!-- Identity check strings -->
-   <java-symbol type="string" name="identity_check_settings_action" />
-   <java-symbol type="string" name="identity_check_settings_package_name" />
-+
-+
-+  <!-- Blur radius used by SystemUI -->
-+  <java-symbol type="dimen" name="min_window_blur_radius" />
-+  <java-symbol type="dimen" name="max_window_blur_radius" />
-+
- </resources>
++</resources>
+diff --git a/core/res/res/values/derp_symbols.xml b/core/res/res/values/derp_symbols.xml
+new file mode 100644
+index 000000000..06b65eef4
+--- /dev/null
++++ b/core/res/res/values/derp_symbols.xml
+@@ -0,0 +1,10 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++Copyright (C) 2024 DerpFest
++SPDX-License-Identifier: Apache-2.0
++-->
++<resources>
++    <!-- Blur radius used by SystemUI -->
++    <java-symbol type="dimen" name="min_window_blur_radius" />
++    <java-symbol type="dimen" name="max_window_blur_radius" />
++</resources>
 diff --git a/packages/SystemUI/animation/src/com/android/systemui/animation/DialogTransitionAnimator.kt b/packages/SystemUI/animation/src/com/android/systemui/animation/DialogTransitionAnimator.kt
 index 8cb3638b1..9bc75441b 100644
 --- a/packages/SystemUI/animation/src/com/android/systemui/animation/DialogTransitionAnimator.kt
@@ -200,5 +201,5 @@ index 000000000..0eb6dc42d
 +    }
 +}
 -- 
-2.47.0
+2.47.1
 
