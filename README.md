@@ -29,9 +29,9 @@ git clone --depth=1 https://github.com/flakeforever/hardware_xiaomi hardware/xia
 ```
 #### Lindroid
 ```
-git clone --depth=1 https://github.com/Linux-on-droid/vendor_lindroid vendor/lindroid
+git clone --depth=1 https://github.com/Linux-on-droid/vendor_lindroid vendor/lindroid --branch=lindroid-22.1
 git clone --depth=1 https://github.com/Linux-on-droid/libhybris libhybris
-git clone --depth=1 https://github.com/Linux-on-droid/external_lxc external/lxc --branch=lindroid-22.1
+git clone --depth=1 https://github.com/Linux-on-droid/external_lxc external/lxc
 ```
 #### Patches
 ```
