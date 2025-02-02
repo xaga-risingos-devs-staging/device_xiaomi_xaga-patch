@@ -14,7 +14,7 @@ cd risingos
 ```
 #### RisingOS
 ```
-repo init -u https://github.com/RisingTechOSS/android -b fifteen --git-lfs --depth=1
+repo init -u https://github.com/RisingOS-Revived/android -b fifteen --git-lfs --depth=1
 repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)
 ```
 #### Device trees
