@@ -47,8 +47,8 @@ git clone --depth=1 https://github.com/kde-yyds/device_xiaomi_mondrian-patch/
 python3 device_xiaomi_mondrian-patch/apply-patches.py
 ```
 Apply what you need. Not all patches are required.
-### Fix errors for Arch Linux
-When building android kernel on Arch Linux, `libyaml` cannot be found and configured correctly. Copy the header and lib to `prebuilts/kernel-build-tools` manually to fix it. (Thanks to [@Finish0314](https://github.com/finish0314) for this workaround)
+### Fix errors for Arch Linux (Thanks to [@Finish0314](https://github.com/finish0314) for this workaround)
+When building android kernel on Arch Linux, `libyaml` cannot be found and configured correctly. Copy the header and lib to `prebuilts/kernel-build-tools` manually to fix it.
 ```
 cp -r /usr/include/yaml.h prebuilts/kernel-build-tools/linux-x86/include/yaml.h
 cp -r /lib64/libyaml-0.so.2.0.9 prebuilts/kernel-build-tools/linux-x86/lib64/libyaml.so
