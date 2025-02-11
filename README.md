@@ -70,7 +70,6 @@ cd ../../../../../
 python3 device_xiaomi_mondrian-patch/apply-patches.py
 ```
 #### Patch Descriptions
-## Patch Descriptions
 
 | Patch Name | Description | Use |
 |------------|-------------|-----|
