@@ -1,11 +1,12 @@
-# A guide on how to build RisingOS with Lindroid for Redmi K60/POCO F5 Pro (Mondrian)
+# A guide on how to build RisingOS with Lindroid and KernelSU for Redmi K60/POCO F5 Pro (Mondrian)
 ## Preparation 
 ### OS
 Make sure you have a GNU/Linux environment. Debian and Ubuntu are recommended.  
-If you are using Arch Linux, you will encounter errors when building kernel. See the guide below to fix it.
+If you are using Arch Linux, you will encounter errors when building kernel. See the guide below to workaround it.
 ### Hardware
-You need a high performance computer. The most important thing is RAM. At least 16GB RAM is required to build smoothly.
-Be sure to enable enough swap if you have a small RAM.
+You need a high performance computer. The most important thing is RAM. At least 16GB RAM is required to build smoothly.  
+Be sure to enable enough swap if you have a small RAM.  
+Reference: AMD Ryzen 7 7700X + 2*8=16GB DDR5 RAM + TiPlus7100 SSD, 8GB Zram and 64GB Swap (Zswap enabled). Around 3 hour for first full build without ccache.
 ### Fetch repositories
 Switch to a working directory.
 ```
@@ -52,7 +53,7 @@ When building android kernel on Arch Linux, `libyaml` cannot be found and config
 cp -r /usr/include/yaml.h prebuilts/kernel-build-tools/linux-x86/include/yaml.h
 cp -r /lib64/libyaml-0.so.2.0.9 prebuilts/kernel-build-tools/linux-x86/lib64/libyaml.so
 ```
-### Workaround sm8450 audio issue
+### Workaround sm8450 audio issue (Thanks to [@flakeforever](https://github.com/flakeforever) for this workaround)
 ```
 # make a full clone because we had used depth=1 flag at repo init
 rm -rf hardware/qcom-caf/sm8450/audio/agm hardware/qcom-caf/sm8450/audio/pal
