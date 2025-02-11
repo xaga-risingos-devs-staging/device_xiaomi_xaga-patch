@@ -39,7 +39,7 @@ git clone --depth=1 https://github.com/Linux-on-droid/external_lxc external/lxc
 ```
 #### KernelSU
 ```
-git clone --depth=1 https://github.com/kde-yyds/android_external_kernelsu external/kernelsu
+git clone https://github.com/kde-yyds/android_external_kernelsu external/kernelsu
 ```
 #### Patches
 ```
