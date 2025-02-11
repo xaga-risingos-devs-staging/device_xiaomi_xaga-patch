@@ -1,0 +1,25 @@
+From 93306b2a4541ba2cb1e7b1dfbe2c05400993387a Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Tue, 11 Feb 2025 09:13:54 +0800
+Subject: [PATCH] Use hardcoded mtdoops fingerprint to avoid load failure
+
+---
+ BoardConfig.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/BoardConfig.mk b/BoardConfig.mk
+index c0e852f..6f0385b 100644
+--- a/BoardConfig.mk
++++ b/BoardConfig.mk
+@@ -142,7 +142,7 @@ BOARD_VENDOR_RAMDISK_FRAGMENT.dlkm.KERNEL_MODULE_DIRS := top
+ BOARD_KERNEL_CMDLINE := \
+     video=vfb:640x400,bpp=32,memsize=3072000 \
+     disable_dma32=on \
+-    mtdoops.fingerprint=$(LINEAGE_VERSION)
++    mtdoops.fingerprint=RisingOS-GAPPS-UNOFFICIAL
+ 
+ BOARD_BOOTCONFIG := \
+     androidboot.hardware=qcom \
+-- 
+2.48.1
+
