@@ -57,10 +57,10 @@ git clone https://github.com/LineageOS/android_vendor_qcom_opensource_arpal-lx h
 # checkout
 cd hardware/qcom-caf/sm8450/audio/agm/
 git checkout 62ac0643c907e9566ed99929d947127d8e3b123e
-cd ../../../../
+cd ../../../../../
 cd hardware/qcom-caf/sm8450/audio/pal/
 git checkout 4dfc6be2ac56b7d4aa5b2d919823e612ce1c711b
-cd ../../../../
+cd ../../../../../
 ```
 ### Build RisingOS
 Switch to bash if you are not on it.
