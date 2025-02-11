@@ -1,0 +1,26 @@
+From 69b5d5be9a445fd73c3d183191951b0ae162f649 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Tue, 11 Feb 2025 19:01:01 +0800
+Subject: [PATCH] Update kernel config to enable sysvipc
+
+Change-Id: Idab723d7a9e61c9b866658f63cdcfa75749681e8
+---
+ s/android-5.10/android-base.config | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/s/android-5.10/android-base.config b/s/android-5.10/android-base.config
+index d6e1f5a..58e1399 100644
+--- a/s/android-5.10/android-base.config
++++ b/s/android-5.10/android-base.config
+@@ -11,7 +11,7 @@
+ # CONFIG_NFS_FS is not set
+ # CONFIG_PM_AUTOSLEEP is not set
+ # CONFIG_RT_GROUP_SCHED is not set
+-# CONFIG_SYSVIPC is not set
++CONFIG_SYSVIPC=y
+ # CONFIG_USELIB is not set
+ CONFIG_ADVISE_SYSCALLS=y
+ CONFIG_AIO=y
+-- 
+2.48.1
+

@@ -33,6 +33,10 @@ git clone --depth=1 https://github.com/Linux-on-droid/vendor_lindroid vendor/lin
 git clone --depth=1 https://github.com/Linux-on-droid/libhybris libhybris
 git clone --depth=1 https://github.com/Linux-on-droid/external_lxc external/lxc
 ```
+#### KernelSU
+```
+git clone --depth=1 https://github.com/kde-yyds/android_external_kernelsu external/kernelsu
+```
 #### Patches
 ```
 git clone --depth=1 https://github.com/kde-yyds/device_xiaomi_mondrian-patch/
@@ -41,7 +45,7 @@ git clone --depth=1 https://github.com/kde-yyds/device_xiaomi_mondrian-patch/
 ```
 python3 device_xiaomi_mondrian-patch/apply-patches.py
 ```
-Apply what you need. Maybe not all patches are required.
+Apply what you need. Not all patches are required.
 ### Fix errors for Arch Linux
 When building android kernel on Arch Linux, `libyaml` cannot be found and configured correctly. Copy the header and lib to `prebuilts/kernel-build-tools` manually to fix it. (Thanks to [@Finish0314](https://github.com/finish0314) for this workaround)
 ```
