@@ -18,7 +18,7 @@ cd risingos
 repo init -u https://github.com/RisingOS-Revived/android -b fifteen --git-lfs --depth=1
 repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)
 ```
-#### Device trees (Thanks to [@flakeforever](https://github.com/flakeforever)
+#### Device trees (Thanks to [@flakeforever](https://github.com/flakeforever))
 ```
 git clone --depth=1 https://github.com/flakeforever/device_xiaomi_mondrian device/xiaomi/mondrian
 git clone --depth=1 https://github.com/flakeforever/device_xiaomi_mondrian-kernel device/xiaomi/mondrian-kernel
