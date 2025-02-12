@@ -1,23 +1,24 @@
- # 
- # This file is part of the device_xiaomi_mondrian-patch distribution (https://github.com/flakeforever/device_xiaomi_mondrian-patch).
- # Copyright (c) 2024 Flakeforever.
- # 
- # This program is free software: you can redistribute it and/or modify  
- # it under the terms of the GNU General Public License as published by  
- # the Free Software Foundation, version 3.
- #
- # This program is distributed in the hope that it will be useful, but 
- # WITHOUT ANY WARRANTY; without even the implied warranty of 
- # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
- # General Public License for more details.
- #
- # You should have received a copy of the GNU General Public License 
- # along with this program. If not, see <http://www.gnu.org/licenses/>.
- #
+#
+# This file is part of the device_xiaomi_mondrian-patch distribution (https://github.com/flakeforever/device_xiaomi_mondrian-patch).
+# Copyright (c) 2024 Flakeforever.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
 
 import curses
 import os
 import subprocess
+import argparse
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -79,13 +80,12 @@ def create_menu(items):
     def update_item(current_item, item, focus):
         color_pair = curses.color_pair(2)
         if focus:
-            color_pair = curses.color_pair(1)   
+            color_pair = curses.color_pair(1)
         if current_item in selected_indices:
             menu_win.addstr(current_item + 3, 2, "[X]" + " " + item["subdirectory"] + "/" + item["patch_file_name"], color_pair)
         else:
-            menu_win.addstr(current_item + 3, 2, "[ ]" + " " + item["subdirectory"] + "/" + item["patch_file_name"], color_pair)       
+            menu_win.addstr(current_item + 3, 2, "[ ]" + " " + item["subdirectory"] + "/" + item["patch_file_name"], color_pair)
 
-        
     # Handle menu navigation and item selection
     current_item = 0
     menu_win.keypad(True)
@@ -105,12 +105,12 @@ def create_menu(items):
                 update_item(current_item, item, 1)
         elif key == curses.KEY_UP:
             if current_item > 0:
-                update_item(current_item, items[current_item], 0)            
+                update_item(current_item, items[current_item], 0)
                 current_item -= 1
                 update_item(current_item, items[current_item], 1)
         elif key == curses.KEY_DOWN:
             if current_item < len(items) - 1:
-                update_item(current_item, items[current_item], 0)            
+                update_item(current_item, items[current_item], 0)
                 current_item += 1
                 update_item(current_item, items[current_item], 1)
 
@@ -126,28 +126,49 @@ def create_menu(items):
 
     return items
 
-# Get patch files in the base directory and its subdirectories
-patch_files = get_patch_files(base_dir)
+def apply_patches(items, quiet=False):
+    if not quiet:
+        items = create_menu(items)
+    else:
+        # In quiet mode, enable all patches
+        for item in items:
+            item["enabled"] = 1
 
-items = []
-# Print the patch files
-print("Patch files:")
-for patch_file in patch_files:
-    item = convert_to_item(patch_file)
-    items.append(item)
+    # Print all items
+    print("Applying patches:")
+    current_path = os.getcwd()
+    for item in items:
+        if item["enabled"] == 1:
+            full_path = os.path.join(current_path, item["full_path"])
+            git_command = f'git -C {item["subdirectory"]} am {full_path}'
+            print("Executing:", git_command)
+            result = subprocess.run(git_command, shell=True)
+            if result.returncode == 0:
+                print("Execute successfully")
+            else:
+                print("Execute failed")
+                if quiet:
+                    # In quiet mode, abort on first failure
+                    return False
+    return True
 
-updated_items = create_menu(items)
+def main():
+    parser = argparse.ArgumentParser(description='Apply patches to the repository')
+    parser.add_argument('--quiet', action='store_true', help='Apply all patches without user interaction')
+    args = parser.parse_args()
 
-# Print all items
-print("Updated items:")
-current_path = os.getcwd()
-for item in updated_items:
-    if item["enabled"] == 1:
-        full_path = os.path.join(current_path, item["full_path"]) 
-        git_command = f'git -C {item["subdirectory"]} am {full_path}'
-        print("Executing:", git_command)
-        result = subprocess.run(git_command, shell=True)
-        if result.returncode == 0:
-            print("Execute successfully")
-        else:
-            print("Execute failed")
+    # Get patch files in the base directory and its subdirectories
+    patch_files = get_patch_files(base_dir)
+
+    items = []
+    # Print the patch files
+    print("Patch files:")
+    for patch_file in patch_files:
+        item = convert_to_item(patch_file)
+        items.append(item)
+
+    success = apply_patches(items, args.quiet)
+    return 0 if success else 1
+
+if __name__ == "__main__":
+    exit(main())
