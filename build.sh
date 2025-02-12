@@ -51,7 +51,6 @@ remove_dir() {
         echo "Successfully removed: $dir"
     else
         echo "Directory does not exist, skipping: $dir"
-        ls -la "$(dirname "$dir")"
     fi
     return 0
 }
