@@ -40,6 +40,7 @@ try_command() {
 
 remove_dir() {
     local dir="$1"
+    echo "Checking directory: $dir"
     if [ -d "$dir" ]; then
         echo "Removing existing directory: $dir"
         rm -rf "$dir"
@@ -47,8 +48,10 @@ remove_dir() {
             echo "Failed to remove directory: $dir"
             return 1
         fi
+        echo "Successfully removed: $dir"
     else
         echo "Directory does not exist, skipping: $dir"
+        ls -la "$(dirname "$dir")"
     fi
     return 0
 }
@@ -72,7 +75,7 @@ cleanup() {
     )
 
     for dir in "${directories[@]}"; do
-        remove_dir \"$dir\"
+        remove_dir $dir
     done
 
     echo "=== Cleanup completed ==="
