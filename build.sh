@@ -43,6 +43,8 @@ init_risingos() {
     echo "Initializing RisingOS repository..."
     retry_command "repo init -u https://github.com/RisingOS-Revived/android -b fifteen --git-lfs --depth=1"
     echo "Syncing RisingOS repository..."
+    rm -rf hardware/qcom-caf/sm8450/audio/agm
+    rm -rf hardware/qcom-caf/sm8450/audio/pal
     retry_command "repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)"
 }
 
