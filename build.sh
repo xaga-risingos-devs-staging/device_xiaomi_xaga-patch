@@ -38,22 +38,55 @@ try_command() {
     fi
 }
 
+remove_dir() {
+    local dir="$1"
+    if [ -d "$dir" ]; then
+        echo "Removing existing directory: $dir"
+        rm -rf "$dir"
+        if [ $? -ne 0 ]; then
+            echo "Failed to remove directory: $dir"
+            return 1
+        fi
+    else
+        echo "Directory does not exist, skipping: $dir"
+    fi
+    return 0
+}
+
+# Function to cleanup existing directories
+cleanup() {
+    echo "=== Cleaning up ==="
+
+    # List of directories to clean
+    local directories=(
+        "device/xiaomi/mondrian"
+        "device/xiaomi/mondrian-kernel"
+        "device/xiaomi/sepolicy"
+        "hardware/xiaomi"
+        "kernel/xiaomi/sm8475"
+        "vendor/xiaomi/mondrian"
+        "vendor/lindroid"
+        "libhybris"
+        "external/lxc"
+        "external/kernelsu"
+    )
+
+    for dir in "${directories[@]}"; do
+        remove_dir \"$dir\"
+    done
+
+    echo "=== Cleanup completed ==="
+}
 # Function to initialize and sync RisingOS repo
 init_risingos() {
     echo "Initializing RisingOS repository..."
     retry_command "repo init -u https://github.com/RisingOS-Revived/android -b fifteen --git-lfs --depth=1"
     echo "Syncing RisingOS repository..."
-    rm -rf device/xiaomi/mondrian
-    rm -rf hardware/qcom-caf/sm8450/audio/agm
-    rm -rf hardware/qcom-caf/sm8450/audio/pal
     retry_command "repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)"
 }
 
 # Function to clone device trees and related repositories
 clone_repositories() {
-    echo "Cleaning up device tree and lindroid and kernelsu repositories..."
-    rm -rf device/xiaomi/mondrian/ device/xiaomi/mondrian-kernel/ device/xiaomi/sepolicy/ device/qcom/common hardware/xiaomi kernel/xiaomi/sm8475/ vendor/xiaomi/mondrian/ vendor/lindroid/ libhybris/ external/lxc external/kernelsu
-
     echo "Cloning device trees and related repositories..."
 
     # Device trees
@@ -72,9 +105,6 @@ clone_repositories() {
 
     # KernelSU
     retry_command "git clone https://github.com/kde-yyds/android_external_kernelsu external/kernelsu"
-
-    # Patches
-    retry_command "git clone --depth=1 https://github.com/kde-yyds/device_xiaomi_mondrian-patch/"
 }
 
 # Function to fix audio issues
@@ -123,6 +153,7 @@ main() {
     echo "Build started at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
     echo "User: $USER"
 
+    cleanup
     init_risingos
     clone_repositories
     fix_audio
