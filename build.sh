@@ -92,7 +92,7 @@ init_risingos() {
 # Function to clone device trees and related repositories
 clone_repositories() {
     echo "Cloning device trees and related repositories..."
-
+    try_command "rm -rf device/xiaomi/mondrian"
     # Device trees
     retry_command "git clone --depth=1 https://github.com/flakeforever/device_xiaomi_mondrian device/xiaomi/mondrian"
     retry_command "git clone --depth=1 https://github.com/flakeforever/device_xiaomi_mondrian-kernel device/xiaomi/mondrian-kernel"
