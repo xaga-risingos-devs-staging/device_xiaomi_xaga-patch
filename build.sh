@@ -64,6 +64,7 @@ cleanup() {
         "device/xiaomi/mondrian"
         "device/xiaomi/mondrian-kernel"
         "device/xiaomi/sepolicy"
+        "device/qcom/common"
         "hardware/xiaomi"
         "kernel/xiaomi/sm8475"
         "vendor/xiaomi/mondrian"
