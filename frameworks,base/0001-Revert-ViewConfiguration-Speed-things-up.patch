@@ -1,0 +1,87 @@
+From 42a0be3120bd91c014b719b68a023760162693bc Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Thu, 13 Feb 2025 11:55:32 +0800
+Subject: [PATCH] Revert "ViewConfiguration: Speed things up"
+
+This reverts commit 4023fafcd93d2a05b068e52786a5ef8805d8dd96.
+---
+ core/java/android/view/ViewConfiguration.java | 10 +++++-----
+ core/res/res/values/config.xml                | 10 +++++-----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/core/java/android/view/ViewConfiguration.java b/core/java/android/view/ViewConfiguration.java
+index 1bf616f29..63bf392b5 100644
+--- a/core/java/android/view/ViewConfiguration.java
++++ b/core/java/android/view/ViewConfiguration.java
+@@ -79,7 +79,7 @@ public class ViewConfiguration {
+      * a long press
+      * @hide
+      */
+-    public static final int DEFAULT_LONG_PRESS_TIMEOUT = 200;
++    public static final int DEFAULT_LONG_PRESS_TIMEOUT = 400;
+ 
+     /**
+      * Defines the default duration in milliseconds between the first tap's up event and the second
+@@ -104,7 +104,7 @@ public class ViewConfiguration {
+      * appropriate button to bring up the global actions dialog (power off,
+      * lock screen, etc).
+      */
+-    private static final int GLOBAL_ACTIONS_KEY_TIMEOUT = 250;
++    private static final int GLOBAL_ACTIONS_KEY_TIMEOUT = 500;
+ 
+     /**
+      * Defines the duration in milliseconds a user needs to hold down the
+@@ -136,7 +136,7 @@ public class ViewConfiguration {
+      * is a jump tap. If the user does not complete the jump tap within this interval, it is
+      * considered to be a tap.
+      */
+-    private static final int JUMP_TAP_TIMEOUT = 250;
++    private static final int JUMP_TAP_TIMEOUT = 500;
+ 
+     /**
+      * Defines the duration in milliseconds between the first tap's up event and
+@@ -170,12 +170,12 @@ public class ViewConfiguration {
+      * Defines the duration in milliseconds we want to display zoom controls in response
+      * to a user panning within an application.
+      */
+-    private static final int ZOOM_CONTROLS_TIMEOUT = 1500;
++    private static final int ZOOM_CONTROLS_TIMEOUT = 3000;
+ 
+     /**
+      * Inset in dips to look for touchable content when the user touches the edge of the screen
+      */
+-    private static final int EDGE_SLOP = 6;
++    private static final int EDGE_SLOP = 12;
+ 
+     /**
+      * Distance a touch can wander before we think the user is scrolling in dips.
+diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
+index f31fd9587..1e986260f 100644
+--- a/core/res/res/values/config.xml
++++ b/core/res/res/values/config.xml
+@@ -146,17 +146,17 @@
+     <bool name="config_disableTransitionAnimation">false</bool>
+ 
+     <!-- The duration (in milliseconds) of a short animation. -->
+-    <integer name="config_shortAnimTime">100</integer>
++    <integer name="config_shortAnimTime">200</integer>
+ 
+     <!-- The duration (in milliseconds) of a medium-length animation. -->
+-    <integer name="config_mediumAnimTime">200</integer>
++    <integer name="config_mediumAnimTime">400</integer>
+ 
+     <!-- The duration (in milliseconds) of a long animation. -->
+-    <integer name="config_longAnimTime">250</integer>
++    <integer name="config_longAnimTime">500</integer>
+ 
+     <!-- The duration (in milliseconds) of the activity open/close and fragment open/close animations. -->
+-    <integer name="config_activityShortDur">75</integer>
+-    <integer name="config_activityDefaultDur">110</integer>
++    <integer name="config_activityShortDur">150</integer>
++    <integer name="config_activityDefaultDur">220</integer>
+ 
+     <!-- Fade out time for screen rotation -->
+     <integer name="config_screen_rotation_fade_out">116</integer>
+-- 
+2.48.1
+
