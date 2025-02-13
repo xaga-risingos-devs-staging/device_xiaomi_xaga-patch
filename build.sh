@@ -71,6 +71,8 @@ cleanup() {
         "libhybris"
         "external/lxc"
         "external/kernelsu"
+        "hardware/qcom-caf/sm8450/audio/agm"
+        "hardware/qcom-caf/sm8450/audio/pal"
     )
 
     for dir in "${directories[@]}"; do
