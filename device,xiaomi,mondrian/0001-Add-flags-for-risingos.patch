@@ -11,7 +11,7 @@ diff --git a/lineage_mondrian.mk b/lineage_mondrian.mk
 index f46526b..8c1a7a0 100644
 --- a/lineage_mondrian.mk
 +++ b/lineage_mondrian.mk
-@@ -28,4 +28,7 @@ PRODUCT_BUILD_PROP_OVERRIDES += \
+@@ -28,4 +28,8 @@ PRODUCT_BUILD_PROP_OVERRIDES += \
  TARGET_BOOT_ANIMATION_RES := 1440
  
  WITH_GMS := true
