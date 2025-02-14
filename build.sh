@@ -74,6 +74,7 @@ cleanup() {
         "external/kernelsu"
         "hardware/qcom-caf/sm8450/audio/agm"
         "hardware/qcom-caf/sm8450/audio/pal"
+        "vendor/official_devices"
     )
 
     for dir in "${directories[@]}"; do
