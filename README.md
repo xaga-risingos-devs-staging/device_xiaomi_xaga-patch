@@ -46,20 +46,7 @@ When building android kernel on Arch Linux, `libyaml` cannot be found and config
 cp -r /usr/include/yaml.h prebuilts/kernel-build-tools/linux-x86/include/yaml.h
 cp -r /lib64/libyaml-0.so.2.0.9 prebuilts/kernel-build-tools/linux-x86/lib64/libyaml.so
 ```
-### Workaround sm8450 audio issue (Thanks to [@flakeforever](https://github.com/flakeforever) for this workaround)
-```
-# make a full clone because we had used depth=1 flag at repo init
-rm -rf hardware/qcom-caf/sm8450/audio/agm hardware/qcom-caf/sm8450/audio/pal
-git clone https://github.com/LineageOS/android_vendor_qcom_opensource_agm hardware/qcom-caf/sm8450/audio/agm/
-git clone https://github.com/LineageOS/android_vendor_qcom_opensource_arpal-lx hardware/qcom-caf/sm8450/audio/pal/
-# checkout
-cd hardware/qcom-caf/sm8450/audio/agm/
-git checkout 62ac0643c907e9566ed99929d947127d8e3b123e
-cd ../../../../../
-cd hardware/qcom-caf/sm8450/audio/pal/
-git checkout 4dfc6be2ac56b7d4aa5b2d919823e612ce1c711b
-cd ../../../../../
-```
+
 ### Apply patches
 ```
 python3 device_xiaomi_mondrian-patch/apply-patches.py
