@@ -1,4 +1,4 @@
-# **A guide on how to build RisingOS with Lindroid and KernelSU for Redmi K60/POCO F5 Pro (Mondrian)**
+# **A guide on how to build RisingOS with KernelSU for Redmi K60/POCO F5 Pro (Mondrian)**
 # Build manually
 ## Preparation 
 ### OS
