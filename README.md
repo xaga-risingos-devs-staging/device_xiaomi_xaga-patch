@@ -1,4 +1,4 @@
-# **A guide on how to build RisingOS with KernelSU for Redmi K60/POCO F5 Pro (Mondrian)**
+# **A guide on how to build RisingOS with KernelSU for POCO X4 GT / Redmi K50i / Redmi Note 11T Pro(+) (xaga)**
 # Build manually
 ## Preparation 
 ### OS
