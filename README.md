@@ -53,13 +53,13 @@ cp -r /lib64/libyaml-0.so.2.0.9 prebuilts/kernel-build-tools/linux-x86/lib64/lib
 
 ### Apply patches
 ```
-python3 device_xiaomi_xgag-patch/apply-patches.py
+python3 device_xiaomi_xaga-patch/apply-patches.py
 ```
 ### Build RisingOS
 Switch to bash if you are not on other shell.
 ```
 . build/envsetup.sh
-riseup mondrian userdebug
+riseup xaga userdebug
 rise b
 ```
 Then wait for hours until the build progress complete.
