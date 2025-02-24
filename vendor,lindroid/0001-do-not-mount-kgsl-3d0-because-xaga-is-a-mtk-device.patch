@@ -1,0 +1,25 @@
+From aba550caf52b08fc0b40f586f510c3362fb02569 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Mon, 24 Feb 2025 22:05:17 +0800
+Subject: [PATCH] do not mount kgsl-3d0 because xaga is a mtk device
+
+---
+ lxc/template.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lxc/template.sh b/lxc/template.sh
+index 8e6b2cb..efe0107 100755
+--- a/lxc/template.sh
++++ b/lxc/template.sh
+@@ -428,7 +428,7 @@ lxc.mount.entry = /system_ext/usr/share/lindroid/libc.so apex/com.android.runtim
+ lxc.mount.entry = /data/lindroid/mnt lindroid bind bind,create=dir,optional 0 0
+ 
+ # GPU devices
+-lxc.mount.entry = /dev/kgsl-3d0 dev/kgsl-3d0 none bind,optional,create=file
++#lxc.mount.entry = /dev/kgsl-3d0 dev/kgsl-3d0 none bind,optional,create=file
+ lxc.mount.entry = /dev/mali0 dev/mali0 none bind,optional,create=file
+ # -- static Lindroid configuration ends here --
+ EOF
+-- 
+2.39.2
+
