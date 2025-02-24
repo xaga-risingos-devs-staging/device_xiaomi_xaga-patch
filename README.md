@@ -29,7 +29,7 @@ git clone --depth=1 https://github.com/XagaForge/android_vendor_xiaomi_mt6895-co
 git clone --depth=1 https://github.com/XagaForge/android_vendor_firmware vendor/firmware
 git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_hardware_xiaomi hardware/xiaomi
 git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_hardware_mediatek hardware/mediatek
-git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_device_mediatek_sepolicy_vndr device/mediatek/sepolicy/vndr
+git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_device_mediatek_sepolicy_vndr device/mediatek/sepolicy_vndr
 ```
 #### MIUI Camera
 ```
