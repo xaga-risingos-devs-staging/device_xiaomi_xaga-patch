@@ -1,0 +1,26 @@
+From 5b5fddc27110d444a0b03a0ee22252edfb0f660a Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Mon, 24 Feb 2025 21:09:46 +0800
+Subject: [PATCH] Inherit from lindroid
+
+---
+ device.mk | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/device.mk b/device.mk
+index a8414f9..91149a5 100644
+--- a/device.mk
++++ b/device.mk
+@@ -10,6 +10,9 @@ $(call inherit-product, device/xiaomi/mt6895-common/mt6895.mk)
+ # Inherit firmware
+ $(call inherit-product-if-exists, vendor/firmware/xaga/firmware.mk)
+ 
++# Inherit lindroid
++$(call inherit-product, vendor/lindroid/lindroid.mk)
++
+ # Call the MiuiCamera setup
+ $(call inherit-product-if-exists, vendor/xiaomi/miuicamera-xaga/device.mk)
+ 
+-- 
+2.39.2
+

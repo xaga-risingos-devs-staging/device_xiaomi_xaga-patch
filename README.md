@@ -35,7 +35,12 @@ git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_device_media
 ```
 git clone --depth=1 https://gitlab.com/priiii1808/proprietary_vendor_xiaomi_miuicamera-xaga.git vendor/xiaomi/miuicamera-xaga
 ```
-
+#### Lindroid
+```
+git clone --depth=1 https://github.com/Linux-on-droid/vendor_lindroid vendor/lindroid --branch=lindroid-22.1
+git clone --depth=1 https://github.com/Linux-on-droid/libhybris libhybris
+git clone --depth=1 https://github.com/Linux-on-droid/external_lxc external/lxc
+```
 #### KernelSU
 ```
 git clone https://github.com/kde-yyds/android_external_kernelsu external/kernelsu

@@ -1,7 +1,7 @@
-From 5399836f01975a8adf85e38c15940abda8c11851 Mon Sep 17 00:00:00 2001
+From 734f6a05b410d6f7f3391a72ab2cd82f9381c74d Mon Sep 17 00:00:00 2001
 From: Hecheng Yu <kde-yyds@qq.com>
 Date: Thu, 20 Feb 2025 19:08:05 +0800
-Subject: [PATCH] enable KernelSU
+Subject: [PATCH 9/9] enable KernelSU
 
 ---
  drivers/Kconfig  | 2 ++
