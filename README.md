@@ -1,5 +1,28 @@
 # **A guide on how to build RisingOS with KernelSU for POCO X4 GT / Redmi K50i / Redmi Note 11T Pro(+) (xaga)**
-# Build manually
+# Build automatically with a script (recommended)
+## Preparation 
+### OS
+Make sure you have a GNU/Linux environment. Debian and Ubuntu are recommended.  
+If you are using Arch Linux, you will encounter errors when building kernel. See the guide below to workaround it.
+### Hardware
+You need a high performance computer. The most important thing is RAM. At least 16GB RAM is required to build smoothly.  
+Be sure to enable enough swap if you have a small RAM.  
+Reference: AMD Ryzen 7 7700X + 2*8=16GB DDR5 RAM + TiPlus7100 SSD, 8GB Zram and 64GB Swap (Zswap enabled). Around 3 hour for first full build without ccache.
+### Working directory
+```
+mkdir risingos
+cd risingos
+```
+### Get patches and build script
+```
+git clone --depth=1 https://github.com/kde-yyds/device_xiaomi_xaga-patch/
+```
+### Run script
+```
+bash device_xiaomi_xaga-patch/build.sh
+```
+Then wait until it ends.
+# Build manually (advanced)
 ## Preparation 
 ### OS
 Make sure you have a GNU/Linux environment. Debian and Ubuntu are recommended.  
