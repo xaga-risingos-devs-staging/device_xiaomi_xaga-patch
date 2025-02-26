@@ -42,7 +42,7 @@ cd risingos
 repo init -u https://github.com/RisingOS-Revived/android -b fifteen --git-lfs --depth=1
 repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)
 ```
-#### Device trees (Thanks to [@XagaForge](https://github.com/XagaForge))
+#### Device trees (Thanks to [@XagaForge](https://github.com/XagaForge) and [@xiaomi-mediatek-devs](https://github.com/xiaomi-mediatek-devs))
 ```
 git clone --depth=1 https://github.com/XagaForge/android_device_xiaomi_xaga device/xiaomi/xaga
 git clone --depth=1 https://github.com/XagaForge/android_device_xiaomi_mt6895-common device/xiaomi/mt6895-common
