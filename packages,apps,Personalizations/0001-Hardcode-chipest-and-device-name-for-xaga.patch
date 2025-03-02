@@ -23,7 +23,7 @@ index a9d5ee9..2b131d7 100644
      private fun getDeviceName(): String {
 -        val deviceName = "${Build.DEVICE}"
 -        return deviceName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-+        return "Redmi Note 11T Pro"
++        return "Redmi Note 11T Pro+"
 +//        val deviceName = "${Build.DEVICE}"
 +//        return deviceName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
      }
