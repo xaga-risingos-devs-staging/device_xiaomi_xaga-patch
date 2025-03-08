@@ -1,0 +1,101 @@
+From 2bd176385299a63cbc3e6954bc3f80ccba738143 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Sat, 8 Mar 2025 11:28:38 +0800
+Subject: [PATCH] Revert "Launcher3: Optimize launcher animations"
+
+This reverts commit 5cb2832c2e9851cee5e1bea1e4d7e3c0d33e02aa.
+---
+ .../launcher3/QuickstepTransitionManager.java | 48 ++++++-------------
+ 1 file changed, 14 insertions(+), 34 deletions(-)
+
+diff --git a/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java b/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java
+index ed66fc2..a0aacf8 100644
+--- a/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java
++++ b/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java
+@@ -192,33 +192,35 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
+      */
+     public static final int STATUS_BAR_TRANSITION_PRE_DELAY = 96;
+ 
+-    public static final long APP_LAUNCH_DURATION;
++    public static final long APP_LAUNCH_DURATION = 500;
+ 
+     private static final long APP_LAUNCH_ALPHA_DURATION = 50;
+     private static final long APP_LAUNCH_ALPHA_START_DELAY = 25;
+ 
+-    public static final int ANIMATION_NAV_FADE_IN_DURATION;
+-    public static final int ANIMATION_NAV_FADE_OUT_DURATION;
+-    public static final long ANIMATION_DELAY_NAV_FADE_IN;
++    public static final int ANIMATION_NAV_FADE_IN_DURATION = 266;
++    public static final int ANIMATION_NAV_FADE_OUT_DURATION = 133;
++    public static final long ANIMATION_DELAY_NAV_FADE_IN =
++            APP_LAUNCH_DURATION - ANIMATION_NAV_FADE_IN_DURATION;
+     public static final Interpolator NAV_FADE_IN_INTERPOLATOR =
+             new PathInterpolator(0f, 0f, 0f, 1f);
+     public static final Interpolator NAV_FADE_OUT_INTERPOLATOR =
+             new PathInterpolator(0.2f, 0f, 1f, 1f);
+ 
+-    public static final int RECENTS_LAUNCH_DURATION;
+-    private static final int LAUNCHER_RESUME_START_DELAY;
+-    private static final int CLOSING_TRANSITION_DURATION_MS;
+-    public static final int SPLIT_LAUNCH_DURATION;
+-    public static final int SPLIT_DIVIDER_ANIM_DURATION;
+-    public static final int CONTENT_ALPHA_DURATION;
++    public static final int RECENTS_LAUNCH_DURATION = 336;
++    private static final int LAUNCHER_RESUME_START_DELAY = 100;
++    private static final int CLOSING_TRANSITION_DURATION_MS = 250;
++    public static final int SPLIT_LAUNCH_DURATION = 370;
++    public static final int SPLIT_DIVIDER_ANIM_DURATION = 100;
++
++    public static final int CONTENT_ALPHA_DURATION = 217;
+     public static final int TRANSIENT_TASKBAR_TRANSITION_DURATION = 417;
+     public static final int TASKBAR_TO_APP_DURATION = 600;
+     // TODO(b/236145847): Tune TASKBAR_TO_HOME_DURATION to 383 after conflict with unlock animation
+     // is solved.
+     private static final int TASKBAR_TO_HOME_DURATION_FAST = 300;
+     private static final int TASKBAR_TO_HOME_DURATION_SLOW = 1000;
+-    protected static final int CONTENT_SCALE_DURATION;
+-    protected static final int CONTENT_SCRIM_DURATION;
++    protected static final int CONTENT_SCALE_DURATION = 350;
++    protected static final int CONTENT_SCRIM_DURATION = 350;
+ 
+     private static final int MAX_NUM_TASKS = 5;
+ 
+@@ -278,21 +280,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
+     private final Interpolator mOpeningXInterpolator;
+     private final Interpolator mOpeningInterpolator;
+ 
+-    static {
+-        APP_LAUNCH_DURATION = getDuration(500);
+-        ANIMATION_NAV_FADE_IN_DURATION = getDuration(266);
+-        ANIMATION_NAV_FADE_OUT_DURATION = getDuration(133);
+-        ANIMATION_DELAY_NAV_FADE_IN = APP_LAUNCH_DURATION - ANIMATION_NAV_FADE_IN_DURATION;
+-        RECENTS_LAUNCH_DURATION = getDuration(336);
+-        LAUNCHER_RESUME_START_DELAY = getDuration(100);
+-        CLOSING_TRANSITION_DURATION_MS = getDuration(250);
+-        SPLIT_LAUNCH_DURATION = getDuration(370);
+-        SPLIT_DIVIDER_ANIM_DURATION = getDuration(100);
+-        CONTENT_ALPHA_DURATION = getDuration(217);
+-        CONTENT_SCALE_DURATION = getDuration(350);
+-        CONTENT_SCRIM_DURATION = getDuration(350);
+-    }
+-
+     public QuickstepTransitionManager(Context context) {
+         mLauncher = Launcher.cast(Launcher.getLauncher(context));
+         mDragLayer = mLauncher.getDragLayer();
+@@ -922,13 +909,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
+         return animatorSet;
+     }
+ 
+-    public static int getDuration(int duration) {
+-        Float sAnimScale = 60.0f;
+-        float animScale2 = Math.max(0.0f, Math.min(1.0f, sAnimScale / 100.0f));
+-        sAnimScale = Float.valueOf(animScale2);
+-        return (int) (duration * sAnimScale);
+-    }
+-
+     private Animator getOpeningWindowAnimatorsForWidget(LauncherAppWidgetHostView v,
+             RemoteAnimationTarget[] appTargets,
+             RemoteAnimationTarget[] wallpaperTargets,
+-- 
+2.48.1
+
