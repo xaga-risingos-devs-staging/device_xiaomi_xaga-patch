@@ -1,6 +1,6 @@
-From 2a0db4e8338a8473ef82283193a08c64c042b333 Mon Sep 17 00:00:00 2001
+From c2a549d74c19caae0d422da3b5c5e4e9015cac64 Mon Sep 17 00:00:00 2001
 From: Hecheng Yu <kde-yyds@qq.com>
-Date: Sat, 8 Mar 2025 11:30:45 +0800
+Date: Sat, 8 Mar 2025 11:48:03 +0800
 Subject: [PATCH] mt6895: enable 32-bit
 
 ---
@@ -8,7 +8,7 @@ Subject: [PATCH] mt6895: enable 32-bit
  1 file changed, 7 insertions(+)
 
 diff --git a/BoardConfigCommon.mk b/BoardConfigCommon.mk
-index e1e761c..4c0ec1f 100644
+index e1e761c..4b1d055 100644
 --- a/BoardConfigCommon.mk
 +++ b/BoardConfigCommon.mk
 @@ -33,6 +33,13 @@ TARGET_CPU_ABI := arm64-v8a
@@ -20,7 +20,7 @@ index e1e761c..4c0ec1f 100644
 +TARGET_2ND_CPU_ABI := armeabi-v7a
 +TARGET_2ND_CPU_ABI2 := armeabi
 +TARGET_2ND_CPU_VARIANT := generic
-+TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a75
++TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a55
 +
  # Boot Image
  BOARD_KERNEL_BASE         := 0x3fff8000
