@@ -95,11 +95,11 @@ init_risingos() {
 clone_repositories() {
     echo "Cloning device trees and related repositories..."
 
-    retry_command "git clone --depth=1 https://github.com/XagaForge/android_device_xiaomi_xaga device/xiaomi/xaga"
-    retry_command "git clone --depth=1 https://github.com/XagaForge/android_device_xiaomi_mt6895-common device/xiaomi/mt6895-common"
-    retry_command "git clone --depth=1 https://github.com/XagaForge/android_kernel_xiaomi_mt6895 kernel/xiaomi/mt6895"
-    retry_command "git clone --depth=1 https://gitlab.com/priiii1808/android_vendor_xiaomi_xaga vendor/xiaomi/xaga"
-    retry_command "git clone --depth=1 https://github.com/XagaForge/android_vendor_xiaomi_mt6895-common vendor/xiaomi/mt6895-common"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs/android_device_xiaomi_xaga device/xiaomi/xaga"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs/android_device_xiaomi_mt6895-common device/xiaomi/mt6895-common"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs/android_kernel_xiaomi_mt6895 kernel/xiaomi/mt6895"
+    retry_command "git lfs clone --depth=1 https://github.com/xaga-risingos-devs/android_vendor_xiaomi_xaga vendor/xiaomi/xaga"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs/android_vendor_xiaomi_mt6895-common vendor/xiaomi/mt6895-common"
     retry_command "git clone --depth=1 https://github.com/XagaForge/android_vendor_firmware vendor/firmware"
     retry_command "git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_hardware_xiaomi hardware/xiaomi"
     retry_command "git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_hardware_mediatek hardware/mediatek"
