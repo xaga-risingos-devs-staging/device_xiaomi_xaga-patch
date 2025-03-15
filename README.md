@@ -50,9 +50,9 @@ git clone --depth=1 https://github.com/xaga-risingos-devs/android_kernel_xiaomi_
 git lfs clone --depth=1 https://github.com/xaga-risingos-devs/android_vendor_xiaomi_xaga vendor/xiaomi/xaga
 git clone --depth=1 https://github.com/xaga-risingos-devs/android_vendor_xiaomi_mt6895-common vendor/xiaomi/mt6895-common
 git clone --depth=1 https://github.com/XagaForge/android_vendor_firmware vendor/firmware
-git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_hardware_xiaomi hardware/xiaomi
-git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_hardware_mediatek hardware/mediatek
-git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_device_mediatek_sepolicy_vndr device/mediatek/sepolicy_vndr
+git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_hardware_xiaomi hardware/xiaomi --branch=lineage-22.1
+git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_hardware_mediatek hardware/mediatek --branch=lineage-22.1
+git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_device_mediatek_sepolicy_vndr device/mediatek/sepolicy_vndr --branch=lineage-22.1
 ```
 #### MIUI Camera
 ```
