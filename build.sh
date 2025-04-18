@@ -86,7 +86,7 @@ cleanup() {
 # Function to initialize and sync RisingOS repo
 init_risingos() {
     echo "Initializing RisingOS repository..."
-    retry_command "repo init -u https://github.com/RisingOS-Revived/android -b fifteen --git-lfs --depth=1"
+    retry_command "repo init -u https://github.com/RisingOS-Revived/android -b qpr2 --git-lfs --depth=1"
     echo "Syncing RisingOS repository..."
     retry_command "repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)"
 }
@@ -95,17 +95,17 @@ init_risingos() {
 clone_repositories() {
     echo "Cloning device trees and related repositories..."
 
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs/android_device_xiaomi_xaga device/xiaomi/xaga"
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs/android_device_xiaomi_mt6895-common device/xiaomi/mt6895-common"
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs/android_kernel_xiaomi_mt6895 kernel/xiaomi/mt6895"
-    retry_command "git lfs clone --depth=1 https://github.com/xaga-risingos-devs/android_vendor_xiaomi_xaga vendor/xiaomi/xaga"
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs/android_vendor_xiaomi_mt6895-common vendor/xiaomi/mt6895-common"
-    retry_command "git clone --depth=1 https://github.com/XagaForge/android_vendor_firmware vendor/firmware"
-    retry_command "git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_hardware_xiaomi hardware/xiaomi --branch=lineage-22.1"
-    retry_command "git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_hardware_mediatek hardware/mediatek --branch=lineage-22.1"
-    retry_command "git clone --depth=1 https://github.com/xiaomi-mediatek-devs/android_device_mediatek_sepolicy_vndr device/mediatek/sepolicy_vndr --branch=lineage-22.2"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_device_xiaomi_xaga device/xiaomi/xaga"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_device_xiaomi_mt6895-common device/xiaomi/mt6895-common"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_kernel_xiaomi_mt6895 kernel/xiaomi/mt6895"
+    retry_command "git lfs clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_vendor_xiaomi_xaga vendor/xiaomi/xaga"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_vendor_xiaomi_mt6895-common vendor/xiaomi/mt6895-common"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_vendor_firmware vendor/firmware"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_hardware_xiaomi hardware/xiaomi"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_hardware_mediatek hardware/mediatek"
+    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_device_mediatek_sepolicy_vndr device/mediatek/sepolicy_vndr"
     retry_command "git clone --depth=1 https://gitlab.com/priiii1808/proprietary_vendor_xiaomi_miuicamera-xaga.git vendor/xiaomi/miuicamera-xaga"
-    retry_command "git clone --depth=1 https://github.com/Linux-on-droid/vendor_lindroid vendor/lindroid --branch=lindroid-22.1"
+    retry_command "git clone --depth=1 --branch=lindroid-22.1 https://github.com/shinichi-c/vendor_lindroid/ vendor/lindroid"
     retry_command "git clone --depth=1 https://github.com/Linux-on-droid/libhybris libhybris"
     retry_command "git clone --depth=1 https://github.com/Linux-on-droid/external_lxc external/lxc"
     retry_command "git clone https://github.com/kde-yyds/android_external_kernelsu external/kernelsu"
@@ -138,7 +138,6 @@ build_risingos() {
 main() {
     echo "=== Starting RisingOS build process ==="
     echo "Build started at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-    echo "User: $USER"
 
     cleanup
     init_risingos

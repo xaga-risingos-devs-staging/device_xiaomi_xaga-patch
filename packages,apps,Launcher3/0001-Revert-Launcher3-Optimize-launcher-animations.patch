@@ -1,18 +1,18 @@
-From 2bd176385299a63cbc3e6954bc3f80ccba738143 Mon Sep 17 00:00:00 2001
-From: Hecheng Yu <kde-yyds@qq.com>
-Date: Sat, 8 Mar 2025 11:28:38 +0800
+From badae4548305e9ed2fe4136a14fa02b871c4c061 Mon Sep 17 00:00:00 2001
+From: HeCheng Yu <kde-yyds@qq.com>
+Date: Fri, 18 Apr 2025 19:06:16 +0800
 Subject: [PATCH] Revert "Launcher3: Optimize launcher animations"
 
-This reverts commit 5cb2832c2e9851cee5e1bea1e4d7e3c0d33e02aa.
+This reverts commit f1d9187376639451a53dc5076ac8d192657d6e47.
 ---
  .../launcher3/QuickstepTransitionManager.java | 48 ++++++-------------
  1 file changed, 14 insertions(+), 34 deletions(-)
 
 diff --git a/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java b/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java
-index ed66fc2..a0aacf8 100644
+index d3a966abdb..c7d7b778af 100644
 --- a/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java
 +++ b/quickstep/src/com/android/launcher3/QuickstepTransitionManager.java
-@@ -192,33 +192,35 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
+@@ -197,25 +197,27 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
       */
      public static final int STATUS_BAR_TRANSITION_PRE_DELAY = 96;
  
@@ -48,8 +48,9 @@ index ed66fc2..a0aacf8 100644
 +
 +    public static final int CONTENT_ALPHA_DURATION = 217;
      public static final int TRANSIENT_TASKBAR_TRANSITION_DURATION = 417;
+     public static final int PINNED_TASKBAR_TRANSITION_DURATION = 600;
      public static final int TASKBAR_TO_APP_DURATION = 600;
-     // TODO(b/236145847): Tune TASKBAR_TO_HOME_DURATION to 383 after conflict with unlock animation
+@@ -223,8 +225,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
      // is solved.
      private static final int TASKBAR_TO_HOME_DURATION_FAST = 300;
      private static final int TASKBAR_TO_HOME_DURATION_SLOW = 1000;
@@ -60,7 +61,7 @@ index ed66fc2..a0aacf8 100644
  
      private static final int MAX_NUM_TASKS = 5;
  
-@@ -278,21 +280,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
+@@ -285,21 +287,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
      private final Interpolator mOpeningXInterpolator;
      private final Interpolator mOpeningInterpolator;
  
@@ -82,7 +83,7 @@ index ed66fc2..a0aacf8 100644
      public QuickstepTransitionManager(Context context) {
          mLauncher = Launcher.cast(Launcher.getLauncher(context));
          mDragLayer = mLauncher.getDragLayer();
-@@ -922,13 +909,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
+@@ -956,13 +943,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
          return animatorSet;
      }
  
@@ -97,5 +98,5 @@ index ed66fc2..a0aacf8 100644
              RemoteAnimationTarget[] appTargets,
              RemoteAnimationTarget[] wallpaperTargets,
 -- 
-2.48.1
+2.49.0
 
