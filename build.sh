@@ -109,6 +109,7 @@ clone_repositories() {
     retry_command "git clone --depth=1 https://github.com/Linux-on-droid/libhybris libhybris"
     retry_command "git clone --depth=1 https://github.com/Linux-on-droid/external_lxc external/lxc"
     retry_command "git clone https://github.com/kde-yyds/android_external_kernelsu external/kernelsu"
+    retry_command "git clone https://github.com/kde-yyds/lindroid-drm-loopback external/lindroid-drm-loopback --branch=work-c99"
 }
 
 # Function to apply patches
