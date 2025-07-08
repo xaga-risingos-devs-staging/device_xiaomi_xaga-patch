@@ -1,0 +1,34 @@
+From a12d84716d92e6448e27b267fdca2cef4efa6011 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Mon, 7 Jul 2025 18:06:28 +0800
+Subject: [PATCH] Get device name via prop vendor.usb.product_string
+
+---
+ .../rising/settings/riseInfoPreferenceController.kt   | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/src/com/rising/settings/riseInfoPreferenceController.kt b/src/com/rising/settings/riseInfoPreferenceController.kt
+index 225a482..ef8fd5e 100644
+--- a/src/com/rising/settings/riseInfoPreferenceController.kt
++++ b/src/com/rising/settings/riseInfoPreferenceController.kt
+@@ -64,8 +64,15 @@ class riseInfoPreferenceController(context: Context) : AbstractPreferenceControl
+     }
+ 
+     private fun getDeviceName(): String {
+-        val deviceName = "${Build.DEVICE}"
+-        return deviceName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
++        // Try to get the device name from vendor.usb.product_string first
++        val deviceName = SystemProperties.get("vendor.usb.product_string")
++        return if (deviceName.isNotEmpty()) {
++            deviceName
++        } else {
++            // Fallback to Build.DEVICE if vendor.usb.product_string is not available
++            val fallbackName = "${Build.DEVICE}"
++            fallbackName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
++        }
+     }
+ 
+     private fun getRisingBuildVersion(): String {
+-- 
+2.50.0
+
