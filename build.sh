@@ -37,51 +37,7 @@ try_command() {
     fi
 }
 
-remove_dir() {
-    local dir="$1"
-    echo "Checking directory: $dir"
-    if [ -d "$dir" ]; then
-        echo "Removing existing directory: $dir"
-        rm -rf "$dir"
-        if [ $? -ne 0 ]; then
-            echo "Failed to remove directory: $dir"
-            return 1
-        fi
-        echo "Successfully removed: $dir"
-    else
-        echo "Directory does not exist, skipping: $dir"
-    fi
-    return 0
-}
 
-# Function to cleanup existing directories
-cleanup() {
-    echo "=== Cleaning up ==="
-
-    # List of directories to clean
-    local directories=(
-        "device/xiaomi/xaga"
-        "device/xiaomi/mt6895-common"
-        "kernel/xiaomi/mt6895"
-        "vendor/xiaomi/xaga"
-        "vendor/xiaomi/mt6895-common"
-        "vendor/firmware"
-        "hardware/xiaomi"
-        "hardware/mediatek"
-        "device/mediatek/sepolicy_vndr"
-        "vendor/xiaomi/miuicamera-xaga"
-        "vendor/lindroid"
-        "libhybris"
-        "external/lxc"
-        "external/kernelsu"
-    )
-
-    for dir in "${directories[@]}"; do
-        remove_dir $dir
-    done
-
-    echo "=== Cleanup completed ==="
-}
 
 # Function to initialize and sync RisingOS repo
 init_risingos() {
@@ -91,25 +47,15 @@ init_risingos() {
     retry_command "repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)"
 }
 
-# Function to clone device trees and related repositories
+# Function to sync device trees and related repositories using local manifests
 clone_repositories() {
-    echo "Cloning device trees and related repositories..."
+    echo "Syncing device trees and related repositories using local manifests..."
 
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_device_xiaomi_xaga device/xiaomi/xaga"
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_device_xiaomi_mt6895-common device/xiaomi/mt6895-common"
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_kernel_xiaomi_mt6895 kernel/xiaomi/mt6895"
-    retry_command "git lfs clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_vendor_xiaomi_xaga vendor/xiaomi/xaga"
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_vendor_xiaomi_mt6895-common vendor/xiaomi/mt6895-common"
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_vendor_firmware vendor/firmware"
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_hardware_xiaomi hardware/xiaomi"
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_hardware_mediatek hardware/mediatek"
-    retry_command "git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_device_mediatek_sepolicy_vndr device/mediatek/sepolicy_vndr"
-    retry_command "git clone --depth=1 https://gitlab.com/priiii1808/proprietary_vendor_xiaomi_miuicamera-xaga.git vendor/xiaomi/miuicamera-xaga"
-    retry_command "git clone --depth=1 --branch=lindroid-22.1 https://github.com/shinichi-c/vendor_lindroid/ vendor/lindroid"
-    retry_command "git clone --depth=1 https://github.com/Linux-on-droid/libhybris libhybris"
-    retry_command "git clone --depth=1 https://github.com/Linux-on-droid/external_lxc external/lxc"
-    retry_command "git clone https://github.com/kde-yyds/android_external_kernelsu external/kernelsu"
-    retry_command "git clone https://github.com/kde-yyds/lindroid-drm-loopback external/lindroid-drm-loopback --branch=work-c99"
+    # Clone local manifests repository to the standard location
+    retry_command "git clone --depth=1 --branch=lineage-23.0 https://github.com/xaga-risingos-devs-staging/local_manifests .repo/local_manifests"
+    
+    # Sync all repositories defined in the local manifest
+    retry_command "repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)"
 }
 
 # Function to apply patches
@@ -140,7 +86,6 @@ main() {
     echo "=== Starting RisingOS build process ==="
     echo "Build started at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 
-    cleanup
     init_risingos
     clone_repositories
     fix_arch_linux

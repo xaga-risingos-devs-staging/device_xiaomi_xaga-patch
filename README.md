@@ -76,18 +76,11 @@ ccache.**
 **repo init -u https://github.com/RisingOS-Revived/android -b qpr2 --git-lfs --depth=1**
 **repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)**
 ```
-#### Device trees (Thanks to [@XagaForge](https://github.com/XagaForge) and [@xiaomi-mediatek-devs](https://github.com/xiaomi-mediatek-devs))
+#### Device trees and related repositories (Thanks to [@XagaForge](https://github.com/XagaForge) and [@xiaomi-mediatek-devs](https://github.com/xiaomi-mediatek-devs))
 
 ```
-**git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_device_xiaomi_xaga device/xiaomi/xaga**
-**git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_device_xiaomi_mt6895-common device/xiaomi/mt6895-common**
-**git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_kernel_xiaomi_mt6895 kernel/xiaomi/mt6895**
-**git lfs clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_vendor_xiaomi_xaga vendor/xiaomi/xaga**
-**git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_vendor_xiaomi_mt6895-common vendor/xiaomi/mt6895-common**
-**git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_vendor_firmware vendor/firmware**
-**git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_hardware_xiaomi hardware/xiaomi**
-**git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_hardware_mediatek hardware/mediatek**
-**git clone --depth=1 https://github.com/xaga-risingos-devs-staging/android_device_mediatek_sepolicy_vndr device/mediatek/sepolicy_vndr**
+**git clone --depth=1 --branch=lineage-23.0 https://github.com/xaga-risingos-devs-staging/local_manifests .repo/local_manifests**
+**repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)**
 ```
 #### MIUI Camera
 
