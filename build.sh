@@ -37,50 +37,7 @@ try_command() {
     fi
 }
 
-remove_dir() {
-    local dir="$1"
-    echo "Checking directory: $dir"
-    if [ -d "$dir" ]; then
-        echo "Removing existing directory: $dir"
-        if ! rm -rf "$dir"; then
-            echo "Failed to remove directory: $dir"
-            return 1
-        fi
-        echo "Successfully removed: $dir"
-    else
-        echo "Directory does not exist, skipping: $dir"
-    fi
-    return 0
-}
 
-# Function to cleanup existing directories
-cleanup() {
-    echo "=== Cleaning up ==="
-
-    # List of directories to clean
-    local directories=(
-        "device/xiaomi/xaga"
-        "device/xiaomi/mt6895-common"
-        "kernel/xiaomi/mt6895"
-        "vendor/xiaomi/xaga"
-        "vendor/xiaomi/mt6895-common"
-        "vendor/firmware"
-        "hardware/xiaomi"
-        "hardware/mediatek"
-        "device/mediatek/sepolicy_vndr"
-        "vendor/xiaomi/miuicamera-xaga"
-        "vendor/lindroid"
-        "libhybris"
-        "external/lxc"
-        "external/kernelsu"
-    )
-
-    for dir in "${directories[@]}"; do
-        remove_dir "$dir"
-    done
-
-    echo "=== Cleanup completed ==="
-}
 
 # Function to initialize and sync RisingOS repo
 init_risingos() {
