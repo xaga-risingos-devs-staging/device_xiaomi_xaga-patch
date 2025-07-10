@@ -1,0 +1,268 @@
+From 96ca5ad5c5ae3981b97cd66405e283bd50975867 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Thu, 10 Jul 2025 10:22:39 +0800
+Subject: [PATCH] Revert "EventHub: Search IDC for additional lights"
+
+This reverts commit 36b11598ba78b17aa3a5fbad8b3891944f977117.
+---
+ services/inputflinger/reader/EventHub.cpp     | 98 +++++++------------
+ .../inputflinger/reader/include/EventHub.h    | 14 +--
+ 2 files changed, 42 insertions(+), 70 deletions(-)
+
+diff --git a/services/inputflinger/reader/EventHub.cpp b/services/inputflinger/reader/EventHub.cpp
+index 559bc0aa7a..4ba092489c 100644
+--- a/services/inputflinger/reader/EventHub.cpp
++++ b/services/inputflinger/reader/EventHub.cpp
+@@ -351,22 +351,6 @@ static std::optional<std::array<LightColor, COLOR_NUM>> getColorIndexArray(
+     return colors;
+ }
+ 
+-static base::Result<std::shared_ptr<PropertyMap>> loadConfiguration(
+-        const InputDeviceIdentifier& ident) {
+-    std::string configurationFile =
+-            getInputDeviceConfigurationFilePathByDeviceIdentifier(ident,
+-                                                                  InputDeviceConfigurationFileType::
+-                                                                          CONFIGURATION);
+-    if (configurationFile.empty()) {
+-        ALOGD("No input device configuration file found for device '%s'.", ident.name.c_str());
+-        return base::Result<std::shared_ptr<PropertyMap>>(nullptr);
+-    }
+-    base::Result<std::shared_ptr<PropertyMap>> propertyMap =
+-            PropertyMap::load(configurationFile.c_str());
+-
+-    return propertyMap;
+-}
+-
+ /**
+  * Read country code information exposed through the sysfs path and convert it to Layout info.
+  */
+@@ -425,22 +409,11 @@ static std::unordered_map<int32_t /*batteryId*/, RawBatteryInfo> readBatteryConf
+  *  Read information about lights exposed through the sysfs path.
+  */
+ static std::unordered_map<int32_t /*lightId*/, RawLightInfo> readLightsConfiguration(
+-        const std::filesystem::path& sysfsRootPath, const std::shared_ptr<PropertyMap>& config) {
++        const std::filesystem::path& sysfsRootPath) {
+     std::unordered_map<int32_t, RawLightInfo> lightInfos;
+     int32_t nextLightId = 0;
+-    // Check if device has any lights.  If the Input Device Configuration file specifies any lights,
+-    // use those in addition to searching the device node itself for lights.
+-    std::vector<std::filesystem::path> paths = findSysfsNodes(sysfsRootPath, SysfsClass::LEDS);
+-
+-    if (config) {
+-        auto additionalLights = config->getString("device.additionalSysfsLedsNode");
+-        if (additionalLights) {
+-            ALOGI("IDC specifies additional path for lights at '%s'",
+-                  additionalLights.value().c_str());
+-            paths.push_back(std::filesystem::path(additionalLights.value()));
+-        }
+-    }
+-
++    // Check if device has any lights.
++    const auto& paths = findSysfsNodes(sysfsRootPath, SysfsClass::LEDS);
+     for (const auto& nodePath : paths) {
+         RawLightInfo info;
+         info.id = ++nextLightId;
+@@ -559,16 +532,17 @@ std::ostream& operator<<(std::ostream& out, const std::optional<RawAbsoluteAxisI
+ // --- EventHub::Device ---
+ 
+ EventHub::Device::Device(int fd, int32_t id, std::string path, InputDeviceIdentifier identifier,
+-                         std::shared_ptr<PropertyMap> config)
++                         std::shared_ptr<const AssociatedDevice> assocDev)
+       : fd(fd),
+         id(id),
+         path(std::move(path)),
+         identifier(std::move(identifier)),
+         classes(0),
+-        configuration(std::move(config)),
++        configuration(nullptr),
+         virtualKeyMap(nullptr),
+         ffEffectPlaying(false),
+         ffEffectId(-1),
++        associatedDevice(std::move(assocDev)),
+         controllerNumber(0),
+         enabled(true),
+         isVirtual(fd < 0),
+@@ -722,6 +696,26 @@ bool EventHub::Device::hasKeycodeInternalLocked(int keycode) const {
+     return false;
+ }
+ 
++void EventHub::Device::loadConfigurationLocked() {
++    configurationFile =
++            getInputDeviceConfigurationFilePathByDeviceIdentifier(identifier,
++                                                                  InputDeviceConfigurationFileType::
++                                                                          CONFIGURATION);
++    if (configurationFile.empty()) {
++        ALOGD("No input device configuration file found for device '%s'.", identifier.name.c_str());
++    } else {
++        android::base::Result<std::unique_ptr<PropertyMap>> propertyMap =
++                PropertyMap::load(configurationFile.c_str());
++        if (!propertyMap.ok()) {
++            ALOGE("Error loading input device configuration file for device '%s'.  "
++                  "Using default configuration.",
++                  identifier.name.c_str());
++        } else {
++            configuration = std::move(*propertyMap);
++        }
++    }
++}
++
+ bool EventHub::Device::loadVirtualKeyMapLocked() {
+     // The virtual key map is supplied by the kernel as a system board property file.
+     std::string propPath = "/sys/board_properties/virtualkeys.";
+@@ -1617,7 +1611,7 @@ void EventHub::assignDescriptorLocked(InputDeviceIdentifier& identifier) {
+ }
+ 
+ std::shared_ptr<const EventHub::AssociatedDevice> EventHub::obtainAssociatedDeviceLocked(
+-        const std::filesystem::path& devicePath, const std::shared_ptr<PropertyMap>& config) const {
++        const std::filesystem::path& devicePath) const {
+     const std::optional<std::filesystem::path> sysfsRootPathOpt =
+             getSysfsRootForEvdevDevicePath(devicePath.c_str());
+     if (!sysfsRootPathOpt) {
+@@ -1634,13 +1628,8 @@ std::shared_ptr<const EventHub::AssociatedDevice> EventHub::obtainAssociatedDevi
+         if (!associatedDevice) {
+             // Found matching associated device for the first time.
+             associatedDevice = dev->associatedDevice;
+-            // Reload this associated device if needed.  Use the base device
+-            // config.  Note that this will essentially arbitrarily pick one
+-            // Device as the base for the AssociatedDevice configuration.  If
+-            // there are multiple Device's that have a configuration for the
+-            // AssociatedDevice, only one configuration will be chosen and will
+-            // be used for all other AssociatedDevices for the same sysfs path.
+-            const auto reloadedDevice = AssociatedDevice(path, associatedDevice->baseDevConfig);
++            // Reload this associated device if needed.
++            const auto reloadedDevice = AssociatedDevice(path);
+             if (reloadedDevice != *dev->associatedDevice) {
+                 ALOGI("The AssociatedDevice changed for path '%s'. Using new AssociatedDevice: %s",
+                       path.c_str(), associatedDevice->dump().c_str());
+@@ -1653,18 +1642,16 @@ std::shared_ptr<const EventHub::AssociatedDevice> EventHub::obtainAssociatedDevi
+ 
+     if (!associatedDevice) {
+         // No existing associated device found for this path, so create a new one.
+-        associatedDevice = std::make_shared<AssociatedDevice>(path, config);
++        associatedDevice = std::make_shared<AssociatedDevice>(path);
+     }
+ 
+     return associatedDevice;
+ }
+ 
+-EventHub::AssociatedDevice::AssociatedDevice(const std::filesystem::path& sysfsRootPath,
+-                                             std::shared_ptr<PropertyMap> config)
++EventHub::AssociatedDevice::AssociatedDevice(const std::filesystem::path& sysfsRootPath)
+       : sysfsRootPath(sysfsRootPath),
+-        baseDevConfig(std::move(config)),
+         batteryInfos(readBatteryConfiguration(sysfsRootPath)),
+-        lightInfos(readLightsConfiguration(sysfsRootPath, baseDevConfig)),
++        lightInfos(readLightsConfiguration(sysfsRootPath)),
+         layoutInfo(readLayoutConfiguration(sysfsRootPath)) {}
+ 
+ std::string EventHub::AssociatedDevice::dump() const {
+@@ -2381,21 +2368,11 @@ void EventHub::openDeviceLocked(const std::string& devicePath) {
+     // Fill in the descriptor.
+     assignDescriptorLocked(identifier);
+ 
+-    // Load the configuration file for the device.
+-    std::shared_ptr<PropertyMap> configuration = nullptr;
+-    base::Result<std::shared_ptr<PropertyMap>> propertyMapResult = loadConfiguration(identifier);
+-    if (!propertyMapResult.ok()) {
+-        ALOGE("Error loading input device configuration file for device '%s'. "
+-              "Using default configuration. Error: %s",
+-              identifier.name.c_str(), propertyMapResult.error().message().c_str());
+-    } else {
+-        configuration = propertyMapResult.value();
+-    }
+-
+     // Allocate device.  (The device object takes ownership of the fd at this point.)
+     int32_t deviceId = mNextDeviceId++;
+     std::unique_ptr<Device> device =
+-            std::make_unique<Device>(fd, deviceId, devicePath, identifier, configuration);
++            std::make_unique<Device>(fd, deviceId, devicePath, identifier,
++                                     obtainAssociatedDeviceLocked(devicePath));
+ 
+     ALOGV("add device %d: %s\n", deviceId, devicePath.c_str());
+     ALOGV("  bus:        %04x\n"
+@@ -2410,8 +2387,8 @@ void EventHub::openDeviceLocked(const std::string& devicePath) {
+     ALOGV("  driver:     v%d.%d.%d\n", driverVersion >> 16, (driverVersion >> 8) & 0xff,
+           driverVersion & 0xff);
+ 
+-    // Obtain the associated device, if any.
+-    device->associatedDevice = obtainAssociatedDeviceLocked(devicePath, device->configuration);
++    // Load the configuration file for the device.
++    device->loadConfigurationLocked();
+ 
+     // Figure out the kinds of events the device reports.
+     device->readDeviceBitMask(EVIOCGBIT(EV_KEY, 0), device->keyBitmask);
+@@ -2750,8 +2727,7 @@ void EventHub::handleSysfsNodeChangeNotificationsLocked() {
+             testedDevices.emplace(dev.associatedDevice, false);
+             return false;
+         }
+-        auto reloadedDevice = AssociatedDevice(dev.associatedDevice->sysfsRootPath,
+-                                               dev.associatedDevice->baseDevConfig);
++        auto reloadedDevice = AssociatedDevice(dev.associatedDevice->sysfsRootPath);
+         const bool changed = *dev.associatedDevice != reloadedDevice;
+         if (changed) {
+             ALOGI("sysfsNodeChanged: Identified change in sysfs nodes for device: %s",
+diff --git a/services/inputflinger/reader/include/EventHub.h b/services/inputflinger/reader/include/EventHub.h
+index 9f3a57c265..457ebfe0d3 100644
+--- a/services/inputflinger/reader/include/EventHub.h
++++ b/services/inputflinger/reader/include/EventHub.h
+@@ -21,7 +21,6 @@
+ #include <filesystem>
+ #include <functional>
+ #include <map>
+-#include <memory>
+ #include <optional>
+ #include <ostream>
+ #include <string>
+@@ -628,12 +627,9 @@ public:
+ private:
+     // Holds information about the sysfs device associated with the Device.
+     struct AssociatedDevice {
+-        AssociatedDevice(const std::filesystem::path& sysfsRootPath,
+-                         std::shared_ptr<PropertyMap> baseDevConfig);
++        AssociatedDevice(const std::filesystem::path& sysfsRootPath);
+         // The sysfs root path of the misc device.
+         std::filesystem::path sysfsRootPath;
+-        // The configuration of the base device.
+-        std::shared_ptr<PropertyMap> baseDevConfig;
+         std::unordered_map<int32_t /*batteryId*/, RawBatteryInfo> batteryInfos;
+         std::unordered_map<int32_t /*lightId*/, RawLightInfo> lightInfos;
+         std::optional<RawLayoutInfo> layoutInfo;
+@@ -670,7 +666,7 @@ private:
+         std::map<int /*axis*/, AxisState> absState;
+ 
+         std::string configurationFile;
+-        std::shared_ptr<PropertyMap> configuration;
++        std::unique_ptr<PropertyMap> configuration;
+         std::unique_ptr<VirtualKeyMap> virtualKeyMap;
+         KeyMap keyMap;
+ 
+@@ -684,7 +680,7 @@ private:
+         int32_t controllerNumber;
+ 
+         Device(int fd, int32_t id, std::string path, InputDeviceIdentifier identifier,
+-               std::shared_ptr<PropertyMap> config);
++               std::shared_ptr<const AssociatedDevice> assocDev);
+         ~Device();
+ 
+         void close();
+@@ -704,6 +700,7 @@ private:
+         void populateAbsoluteAxisStates();
+         bool hasKeycodeLocked(int keycode) const;
+         bool hasKeycodeInternalLocked(int keycode) const;
++        void loadConfigurationLocked();
+         bool loadVirtualKeyMapLocked();
+         status_t loadKeyMapLocked();
+         bool isExternalDeviceLocked();
+@@ -735,8 +732,7 @@ private:
+     void addDeviceLocked(std::unique_ptr<Device> device) REQUIRES(mLock);
+     void assignDescriptorLocked(InputDeviceIdentifier& identifier) REQUIRES(mLock);
+     std::shared_ptr<const AssociatedDevice> obtainAssociatedDeviceLocked(
+-            const std::filesystem::path& devicePath,
+-            const std::shared_ptr<PropertyMap>& config) const REQUIRES(mLock);
++            const std::filesystem::path& devicePath) const REQUIRES(mLock);
+ 
+     void closeDeviceByPathLocked(const std::string& devicePath) REQUIRES(mLock);
+     void closeVideoDeviceByPathLocked(const std::string& devicePath) REQUIRES(mLock);
+-- 
+2.50.0
+
