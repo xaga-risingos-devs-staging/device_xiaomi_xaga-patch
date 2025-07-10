@@ -129,7 +129,6 @@ main() {
     echo "=== Starting RisingOS build process ==="
     echo "Build started at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 
-    cleanup
     init_risingos
     clone_repositories
     fix_arch_linux
