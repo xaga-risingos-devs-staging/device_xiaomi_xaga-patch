@@ -1,0 +1,90 @@
+From 293cc996cbfc715b2204008c7b7072d3e93f0167 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Wed, 13 Aug 2025 19:12:24 +0800
+Subject: [PATCH] Force strong keyboard vibration
+
+---
+ .../vibrator/VibratorManagerService.java      | 55 ++++++++++++++++---
+ 1 file changed, 48 insertions(+), 7 deletions(-)
+
+diff --git a/services/core/java/com/android/server/vibrator/VibratorManagerService.java b/services/core/java/com/android/server/vibrator/VibratorManagerService.java
+index b9530978e..7a48dbdf6 100644
+--- a/services/core/java/com/android/server/vibrator/VibratorManagerService.java
++++ b/services/core/java/com/android/server/vibrator/VibratorManagerService.java
+@@ -69,6 +69,7 @@ import android.os.vibrator.persistence.ParsedVibration;
+ import android.os.vibrator.persistence.VibrationXmlParser;
+ import android.text.TextUtils;
+ import android.util.IndentingPrintWriter;
++import android.util.Log;
+ import android.util.Slog;
+ import android.util.SparseArray;
+ import android.util.proto.ProtoOutputStream;
+@@ -529,18 +530,58 @@ public class VibratorManagerService extends IVibratorManagerService.Stub {
+     HalVibration performHapticFeedbackInternal(
+             int uid, int deviceId, String opPkg, int constant, String reason,
+             IBinder token, int flags, int privFlags) {
+-        // Make sure we report the constant id in the requested haptic feedback reason.
+-        reason = "performHapticFeedback(constant=" + constant + "): " + reason;
++
++        // Add logging for keyboard haptics
++        boolean isKeyboardHaptic = (constant == HapticFeedbackConstants.KEYBOARD_TAP ||
++                                constant == HapticFeedbackConstants.KEYBOARD_PRESS ||
++                                constant == HapticFeedbackConstants.KEYBOARD_RELEASE);
++
++        if (isKeyboardHaptic) {
++            Log.d("KeyboardHaptics", "Original keyboard haptic detected: constant=" + constant +
++                ", flags=" + flags + ", privFlags=" + privFlags);
++        }
++
++        // Force REJECT constant for keyboard haptics to ensure stronger feedback
++        int effectiveConstant = constant;
++        if (isKeyboardHaptic) {
++            // Replace with REJECT constant which maps to effect 5 in HAL
++            effectiveConstant = HapticFeedbackConstants.REJECT;
++
++            // Force flags to ensure vibration happens regardless of settings
++            flags |= HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING;
++            flags |= HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING;
++
++            // Add private flag for strong vibration
++            privFlags |= VibrationAttributes.FLAG_BYPASS_USER_VIBRATION_INTENSITY_OFF;
++
++            Log.d("KeyboardHaptics", "Enhanced keyboard haptic: effectiveConstant=" + effectiveConstant +
++                ", flags=" + flags + ", privFlags=" + privFlags);
++        }
++
++        // Original implementation continues with effectiveConstant
++        reason = "performHapticFeedback(constant=" + effectiveConstant + "): " + reason;
+         HapticFeedbackVibrationProvider hapticVibrationProvider = getHapticVibrationProvider();
+-        Status ignoreStatus = shouldIgnoreHapticFeedback(constant, reason, hapticVibrationProvider);
++
++        Status ignoreStatus = shouldIgnoreHapticFeedback(effectiveConstant, reason, hapticVibrationProvider);
+         if (ignoreStatus != null) {
+             logAndRecordPerformHapticFeedbackAttempt(uid, deviceId, opPkg, reason, ignoreStatus);
++            if (isKeyboardHaptic) {
++                Log.d("KeyboardHaptics", "Haptic feedback ignored despite enhancement: " + ignoreStatus);
++            }
+             return null;
+         }
+-        return performHapticFeedbackWithEffect(uid, deviceId, opPkg, constant, reason, token,
+-                hapticVibrationProvider.getVibration(constant),
+-                hapticVibrationProvider.getVibrationAttributes(
+-                        constant, flags, privFlags));
++
++        VibrationEffect effect = hapticVibrationProvider.getVibration(effectiveConstant);
++        VibrationAttributes attrs = hapticVibrationProvider.getVibrationAttributes(
++                        effectiveConstant, flags, privFlags);
++
++        if (isKeyboardHaptic) {
++            Log.d("KeyboardHaptics", "Final vibration effect type: " + effect.getClass().getSimpleName() +
++                ", attributes usage: " + attrs.getUsage());
++        }
++
++        return performHapticFeedbackWithEffect(uid, deviceId, opPkg, effectiveConstant, reason, token,
++                effect, attrs);
+     }
+ 
+     /**
+-- 
+2.50.1
+
