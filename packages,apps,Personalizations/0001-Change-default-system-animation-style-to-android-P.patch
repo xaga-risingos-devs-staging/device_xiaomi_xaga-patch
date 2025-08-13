@@ -1,0 +1,25 @@
+From 6a905f5e095985d79ab800cdc4cfc32f08afc088 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Wed, 13 Aug 2025 19:05:17 +0800
+Subject: [PATCH] Change default system animation style to android P
+
+---
+ res/xml/rising_settings_themes.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/res/xml/rising_settings_themes.xml b/res/xml/rising_settings_themes.xml
+index 8427159..a98a8ff 100644
+--- a/res/xml/rising_settings_themes.xml
++++ b/res/xml/rising_settings_themes.xml
+@@ -120,7 +120,7 @@
+             android:dialogTitle="@string/system_animation_style_title"
+             android:entries="@array/system_animation_styles_entries"
+             android:entryValues="@array/system_animation_styles_values"
+-            android:defaultValue="0"
++            android:defaultValue="1"
+             android:summary="%s"
+             />
+ 
+-- 
+2.50.1
+

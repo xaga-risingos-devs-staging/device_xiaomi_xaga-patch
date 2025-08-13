@@ -1,7 +1,7 @@
 From a12d84716d92e6448e27b267fdca2cef4efa6011 Mon Sep 17 00:00:00 2001
 From: Hecheng Yu <kde-yyds@qq.com>
 Date: Mon, 7 Jul 2025 18:06:28 +0800
-Subject: [PATCH] Get device name via prop vendor.usb.product_string
+Subject: [PATCH] Get device name via prop bluetooth.device.default_name
 
 ---
  .../rising/settings/riseInfoPreferenceController.kt   | 11 +++++++++--
@@ -17,12 +17,12 @@ index 225a482..ef8fd5e 100644
      private fun getDeviceName(): String {
 -        val deviceName = "${Build.DEVICE}"
 -        return deviceName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-+        // Try to get the device name from vendor.usb.product_string first
-+        val deviceName = SystemProperties.get("vendor.usb.product_string")
++        // Try to get the device name from bluetooth.device.default_name first
++        val deviceName = SystemProperties.get("bluetooth.device.default_name")
 +        return if (deviceName.isNotEmpty()) {
 +            deviceName
 +        } else {
-+            // Fallback to Build.DEVICE if vendor.usb.product_string is not available
++            // Fallback to Build.DEVICE if bluetooth.device.default_name is not available
 +            val fallbackName = "${Build.DEVICE}"
 +            fallbackName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 +        }
