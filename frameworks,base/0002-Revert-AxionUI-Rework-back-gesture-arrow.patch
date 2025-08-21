@@ -1,0 +1,805 @@
+From 04ffa70f1f9fd2d3c583e815fbad08dcdaeada6d Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Thu, 21 Aug 2025 11:49:14 +0800
+Subject: [PATCH 2/2] Revert "[AxionUI] Rework back gesture arrow"
+
+This reverts commit f5fa0937f76660ed7183be0f517f5ac17217d835.
+---
+ packages/SystemUI/res/values/dimens.xml       |  22 +-
+ .../navigationbar/RegionSamplingHelper.java   | 332 ------------------
+ .../src/com/android/systemui/Dependency.java  |  14 -
+ .../navigationbar/gestural/BackPanel.kt       | 111 +-----
+ .../gestural/BackPanelController.kt           |  68 +---
+ 5 files changed, 15 insertions(+), 532 deletions(-)
+ delete mode 100644 packages/SystemUI/shared/src/com/android/systemui/shared/navigationbar/RegionSamplingHelper.java
+
+diff --git a/packages/SystemUI/res/values/dimens.xml b/packages/SystemUI/res/values/dimens.xml
+index c18941c0f1c9..cd4c2a8651b5 100644
+--- a/packages/SystemUI/res/values/dimens.xml
++++ b/packages/SystemUI/res/values/dimens.xml
+@@ -62,22 +62,22 @@
+     <dimen name="navigation_edge_action_deactivation_drag_threshold">32dp</dimen>
+ 
+     <!-- The thickness of the arrow -->
+-    <dimen name="navigation_edge_arrow_thickness">1.5dp</dimen>
++    <dimen name="navigation_edge_arrow_thickness">4dp</dimen>
+ 
+     <!-- entry state -->
+     <item name="navigation_edge_entry_scale" format="float" type="dimen">0.98</item>
+-    <dimen name="navigation_edge_entry_margin">1.5dp</dimen>
++    <dimen name="navigation_edge_entry_margin">4dp</dimen>
+     <item name="navigation_edge_entry_background_alpha" format="float" type="dimen">1.0</item>
+     <dimen name="navigation_edge_entry_background_width">0dp</dimen>
+     <dimen name="navigation_edge_entry_background_height">48dp</dimen>
+     <dimen name="navigation_edge_entry_edge_corners">6dp</dimen>
+     <dimen name="navigation_edge_entry_far_corners">6dp</dimen>
+     <item name="navigation_edge_entry_arrow_alpha" format="float" type="dimen">0.0</item>
+-    <dimen name="navigation_edge_entry_arrow_length">0dp</dimen>
+-    <dimen name="navigation_edge_entry_arrow_height">13.5dp</dimen>
++    <dimen name="navigation_edge_entry_arrow_length">8.6dp</dimen>
++    <dimen name="navigation_edge_entry_arrow_height">5dp</dimen>
+ 
+     <!-- pre-threshold -->
+-    <dimen name="navigation_edge_pre_threshold_margin">1.5dp</dimen>
++    <dimen name="navigation_edge_pre_threshold_margin">4dp</dimen>
+     <item name="navigation_edge_pre_threshold_background_alpha" format="float" type="dimen">1.0
+     </item>
+     <item name="navigation_edge_pre_threshold_scale" format="float" type="dimen">0.98</item>
+@@ -86,8 +86,8 @@
+     <dimen name="navigation_edge_pre_threshold_edge_corners">16dp</dimen>
+     <dimen name="navigation_edge_pre_threshold_far_corners">20dp</dimen>
+     <item name="navigation_edge_pre_threshold_arrow_alpha" format="float" type="dimen">1.0</item>
+-    <dimen name="navigation_edge_pre_threshold_arrow_length">14dp</dimen>
+-    <dimen name="navigation_edge_pre_threshold_arrow_height">11.5dp</dimen>
++    <dimen name="navigation_edge_pre_threshold_arrow_length">8dp</dimen>
++    <dimen name="navigation_edge_pre_threshold_arrow_height">5.6dp</dimen>
+ 
+     <!-- active (post-threshold) -->
+     <item name="navigation_edge_active_scale" format="float" type="dimen">1.0</item>
+@@ -98,8 +98,8 @@
+     <dimen name="navigation_edge_active_edge_corners">24dp</dimen>
+     <dimen name="navigation_edge_active_far_corners">24dp</dimen>
+     <item name="navigation_edge_active_arrow_alpha" format="float" type="dimen">1.0</item>
+-    <dimen name="navigation_edge_active_arrow_length">12dp</dimen>
+-    <dimen name="navigation_edge_active_arrow_height">13.5dp</dimen>
++    <dimen name="navigation_edge_active_arrow_length">6.4dp</dimen>
++    <dimen name="navigation_edge_active_arrow_height">7.2dp</dimen>
+ 
+     <!-- committed -->
+     <item name="navigation_edge_committed_scale" format="float" type="dimen">0.85</item>
+@@ -118,8 +118,8 @@
+     <dimen name="navigation_edge_stretch_edge_corners">24dp</dimen>
+     <dimen name="navigation_edge_stretch_far_corners">24dp</dimen>
+     <item name="navigation_edge_strech_arrow_alpha" format="float" type="dimen">1.0</item>
+-    <dimen name="navigation_edge_stretched_arrow_length">11dp</dimen>
+-    <dimen name="navigation_edge_stretched_arrow_height">13dp</dimen>
++    <dimen name="navigation_edge_stretched_arrow_length">5.6dp</dimen>
++    <dimen name="navigation_edge_stretched_arrow_height">8dp</dimen>
+ 
+     <dimen name="navigation_edge_cancelled_arrow_length">12dp</dimen>
+     <dimen name="navigation_edge_cancelled_arrow_height">0dp</dimen>
+diff --git a/packages/SystemUI/shared/src/com/android/systemui/shared/navigationbar/RegionSamplingHelper.java b/packages/SystemUI/shared/src/com/android/systemui/shared/navigationbar/RegionSamplingHelper.java
+deleted file mode 100644
+index 88d8b2cd3426..000000000000
+--- a/packages/SystemUI/shared/src/com/android/systemui/shared/navigationbar/RegionSamplingHelper.java
++++ /dev/null
+@@ -1,332 +0,0 @@
+-/*
+- * Copyright (C) 2020 The Android Open Source Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package com.android.systemui.shared.navigationbar;
+-
+-import static android.view.Display.DEFAULT_DISPLAY;
+-
+-import android.graphics.Rect;
+-import android.os.Build;
+-import android.os.Handler;
+-import android.view.CompositionSamplingListener;
+-import android.view.SurfaceControl;
+-import android.view.View;
+-import android.view.ViewRootImpl;
+-import android.view.ViewTreeObserver;
+-
+-import androidx.annotation.VisibleForTesting;
+-
+-import java.io.PrintWriter;
+-import java.util.concurrent.Executor;
+-
+-/**
+- * A helper class to sample regions on the screen and inspect its luminosity.
+- */
+-public class RegionSamplingHelper implements View.OnAttachStateChangeListener,
+-        View.OnLayoutChangeListener {
+-
+-    // Luminance threshold to determine black/white contrast for the navigation affordances.
+-    // Passing the threshold of this luminance value will make the button black otherwise white
+-    private static final float NAVIGATION_LUMINANCE_THRESHOLD = 0.5f;
+-    // Luminance change threshold that allows applying new value if difference was exceeded
+-    private static final float NAVIGATION_LUMINANCE_CHANGE_THRESHOLD = 0.05f;
+-
+-    private final Handler mHandler = new Handler();
+-    private final View mSampledView;
+-
+-    private final CompositionSamplingListener mSamplingListener;
+-
+-    /**
+-     * The requested sampling bounds that we want to sample from
+-     */
+-    private final Rect mSamplingRequestBounds = new Rect();
+-
+-    /**
+-     * The sampling bounds that are currently registered.
+-     */
+-    private final Rect mRegisteredSamplingBounds = new Rect();
+-    private final SamplingCallback mCallback;
+-    private final Executor mBackgroundExecutor;
+-    private final SysuiCompositionSamplingListener mCompositionSamplingListener;
+-    private boolean mSamplingEnabled = false;
+-    private boolean mSamplingListenerRegistered = false;
+-
+-    private float mLastMedianLuma;
+-    private float mCurrentMedianLuma;
+-    private boolean mWaitingOnDraw;
+-    private boolean mIsDestroyed;
+-
+-    private boolean mFirstSamplingAfterStart;
+-    private boolean mWindowVisible;
+-    private boolean mWindowHasBlurs;
+-    private SurfaceControl mRegisteredStopLayer = null;
+-    // A copy of mRegisteredStopLayer where we own the life cycle and can access from a bg thread.
+-    private SurfaceControl mWrappedStopLayer = null;
+-    private ViewTreeObserver.OnDrawListener mUpdateOnDraw = new ViewTreeObserver.OnDrawListener() {
+-        @Override
+-        public void onDraw() {
+-            // We need to post the remove runnable, since it's not allowed to remove in onDraw
+-            mHandler.post(mRemoveDrawRunnable);
+-            RegionSamplingHelper.this.onDraw();
+-        }
+-    };
+-    private Runnable mRemoveDrawRunnable = new Runnable() {
+-        @Override
+-        public void run() {
+-            mSampledView.getViewTreeObserver().removeOnDrawListener(mUpdateOnDraw);
+-        }
+-    };
+-
+-    /**
+-     * @deprecated Pass a main executor.
+-     */
+-    public RegionSamplingHelper(View sampledView, SamplingCallback samplingCallback,
+-            Executor backgroundExecutor) {
+-        this(sampledView, samplingCallback, sampledView.getContext().getMainExecutor(),
+-                backgroundExecutor);
+-    }
+-
+-    public RegionSamplingHelper(View sampledView, SamplingCallback samplingCallback,
+-            Executor mainExecutor, Executor backgroundExecutor) {
+-        this(sampledView, samplingCallback, mainExecutor,
+-                backgroundExecutor, new SysuiCompositionSamplingListener());
+-    }
+-
+-    @VisibleForTesting
+-    RegionSamplingHelper(View sampledView, SamplingCallback samplingCallback,
+-            Executor mainExecutor, Executor backgroundExecutor,
+-            SysuiCompositionSamplingListener compositionSamplingListener) {
+-        mBackgroundExecutor = backgroundExecutor;
+-        mCompositionSamplingListener = compositionSamplingListener;
+-        mSamplingListener = new CompositionSamplingListener(mainExecutor) {
+-            @Override
+-            public void onSampleCollected(float medianLuma) {
+-                if (mSamplingEnabled) {
+-                    updateMedianLuma(medianLuma);
+-                }
+-            }
+-        };
+-        mSampledView = sampledView;
+-        mSampledView.addOnAttachStateChangeListener(this);
+-        mSampledView.addOnLayoutChangeListener(this);
+-
+-        mCallback = samplingCallback;
+-    }
+-
+-    /**
+-     * Make callback accessible
+-     */
+-    @VisibleForTesting
+-    public SamplingCallback getCallback() {
+-        return mCallback;
+-    }
+-    private void onDraw() {
+-        if (mWaitingOnDraw) {
+-            mWaitingOnDraw = false;
+-            updateSamplingListener();
+-        }
+-    }
+-
+-    public void start(Rect initialSamplingBounds) {
+-        if (!mCallback.isSamplingEnabled()) {
+-            return;
+-        }
+-        if (initialSamplingBounds != null) {
+-            mSamplingRequestBounds.set(initialSamplingBounds);
+-        }
+-        mSamplingEnabled = true;
+-        // make sure we notify once
+-        mLastMedianLuma = -1;
+-        mFirstSamplingAfterStart = true;
+-        updateSamplingListener();
+-    }
+-
+-    public void stop() {
+-        mSamplingEnabled = false;
+-        updateSamplingListener();
+-    }
+-
+-    public void stopAndDestroy() {
+-        stop();
+-        mBackgroundExecutor.execute(mSamplingListener::destroy);
+-        mIsDestroyed = true;
+-    }
+-
+-    @Override
+-    public void onViewAttachedToWindow(View view) {
+-        updateSamplingListener();
+-    }
+-
+-    @Override
+-    public void onViewDetachedFromWindow(View view) {
+-        stopAndDestroy();
+-    }
+-
+-    @Override
+-    public void onLayoutChange(View v, int left, int top, int right, int bottom,
+-            int oldLeft, int oldTop, int oldRight, int oldBottom) {
+-        updateSamplingRect();
+-    }
+-
+-    private void updateSamplingListener() {
+-        boolean isSamplingEnabled = mSamplingEnabled
+-                && !mSamplingRequestBounds.isEmpty()
+-                && mWindowVisible
+-                && !mWindowHasBlurs
+-                && (mSampledView.isAttachedToWindow() || mFirstSamplingAfterStart);
+-        if (isSamplingEnabled) {
+-            ViewRootImpl viewRootImpl = mSampledView.getViewRootImpl();
+-            SurfaceControl stopLayerControl = null;
+-            if (viewRootImpl != null) {
+-                 stopLayerControl = viewRootImpl.getSurfaceControl();
+-            }
+-            if (stopLayerControl == null || !stopLayerControl.isValid()) {
+-                if (!mWaitingOnDraw) {
+-                    mWaitingOnDraw = true;
+-                    // The view might be attached but we haven't drawn yet, so wait until the
+-                    // next draw to update the listener again with the stop layer, such that our
+-                    // own drawing doesn't affect the sampling.
+-                    if (mHandler.hasCallbacks(mRemoveDrawRunnable)) {
+-                        mHandler.removeCallbacks(mRemoveDrawRunnable);
+-                    } else {
+-                        mSampledView.getViewTreeObserver().addOnDrawListener(mUpdateOnDraw);
+-                    }
+-                }
+-                // If there's no valid surface, let's just sample without a stop layer, so we
+-                // don't have to delay
+-                stopLayerControl = null;
+-            }
+-            if (!mSamplingRequestBounds.equals(mRegisteredSamplingBounds)
+-                    || mRegisteredStopLayer != stopLayerControl) {
+-                // We only want to re-register if something actually changed
+-                unregisterSamplingListener();
+-                mSamplingListenerRegistered = true;
+-                SurfaceControl wrappedStopLayer = wrap(stopLayerControl);
+-
+-                // pass this to background thread to avoid empty Rect race condition
+-                final Rect boundsCopy = new Rect(mSamplingRequestBounds);
+-
+-                mBackgroundExecutor.execute(() -> {
+-                    if (wrappedStopLayer != null && !wrappedStopLayer.isValid()) {
+-                        return;
+-                    }
+-                    mCompositionSamplingListener.register(mSamplingListener, DEFAULT_DISPLAY,
+-                            wrappedStopLayer, boundsCopy);
+-                });
+-                mRegisteredSamplingBounds.set(mSamplingRequestBounds);
+-                mRegisteredStopLayer = stopLayerControl;
+-                mWrappedStopLayer = wrappedStopLayer;
+-            }
+-            mFirstSamplingAfterStart = false;
+-        } else {
+-            unregisterSamplingListener();
+-        }
+-    }
+-
+-    @VisibleForTesting
+-    protected SurfaceControl wrap(SurfaceControl stopLayerControl) {
+-        return stopLayerControl == null ? null : new SurfaceControl(stopLayerControl,
+-                "regionSampling");
+-    }
+-
+-    private void unregisterSamplingListener() {
+-        if (mSamplingListenerRegistered) {
+-            mSamplingListenerRegistered = false;
+-            SurfaceControl wrappedStopLayer = mWrappedStopLayer;
+-            mRegisteredStopLayer = null;
+-            mWrappedStopLayer = null;
+-            mRegisteredSamplingBounds.setEmpty();
+-            mBackgroundExecutor.execute(() -> {
+-                mCompositionSamplingListener.unregister(mSamplingListener);
+-                if (wrappedStopLayer != null && wrappedStopLayer.isValid()) {
+-                    wrappedStopLayer.release();
+-                }
+-            });
+-        }
+-    }
+-
+-    private void updateMedianLuma(float medianLuma) {
+-        mCurrentMedianLuma = medianLuma;
+-
+-        // If the difference between the new luma and the current luma is larger than threshold
+-        // then apply the current luma, this is to prevent small changes causing colors to flicker
+-        if (Math.abs(mCurrentMedianLuma - mLastMedianLuma)
+-                > NAVIGATION_LUMINANCE_CHANGE_THRESHOLD) {
+-            mCallback.onRegionDarknessChanged(
+-                    medianLuma < NAVIGATION_LUMINANCE_THRESHOLD /* isRegionDark */);
+-            mLastMedianLuma = medianLuma;
+-        }
+-    }
+-
+-    public void updateSamplingRect() {
+-        Rect sampledRegion = mCallback.getSampledRegion(mSampledView);
+-        if (!mSamplingRequestBounds.equals(sampledRegion)) {
+-            mSamplingRequestBounds.set(sampledRegion);
+-            updateSamplingListener();
+-        }
+-    }
+-
+-    public void setWindowVisible(boolean visible) {
+-        mWindowVisible = visible;
+-        updateSamplingListener();
+-    }
+-
+-    /**
+-     * If we're blurring the shade window.
+-     */
+-    public void setWindowHasBlurs(boolean hasBlurs) {
+-        mWindowHasBlurs = hasBlurs;
+-        updateSamplingListener();
+-    }
+-
+-    public interface SamplingCallback {
+-        /**
+-         * Called when the darkness of the sampled region changes
+-         * @param isRegionDark true if the sampled luminance is below the luminance threshold
+-         */
+-        void onRegionDarknessChanged(boolean isRegionDark);
+-
+-        /**
+-         * Get the sampled region of interest from the sampled view
+-         * @param sampledView The view that this helper is attached to for convenience
+-         * @return the region to be sampled in sceen coordinates. Return {@code null} to avoid
+-         * sampling in this frame
+-         */
+-        Rect getSampledRegion(View sampledView);
+-
+-        /**
+-         * @return if sampling should be enabled in the current configuration
+-         */
+-        default boolean isSamplingEnabled() {
+-            return true;
+-        }
+-    }
+-
+-    @VisibleForTesting
+-    public static class SysuiCompositionSamplingListener {
+-        public void register(CompositionSamplingListener listener,
+-                int displayId, SurfaceControl stopLayer, Rect samplingArea) {
+-            CompositionSamplingListener.register(listener, displayId, stopLayer, samplingArea);
+-        }
+-
+-        /**
+-         * Unregisters a sampling listener.
+-         */
+-        public void unregister(CompositionSamplingListener listener) {
+-            CompositionSamplingListener.unregister(listener);
+-        }
+-    }
+-}
+diff --git a/packages/SystemUI/src/com/android/systemui/Dependency.java b/packages/SystemUI/src/com/android/systemui/Dependency.java
+index 25f015249b12..03793bd17a37 100644
+--- a/packages/SystemUI/src/com/android/systemui/Dependency.java
++++ b/packages/SystemUI/src/com/android/systemui/Dependency.java
+@@ -74,7 +74,6 @@ import com.android.systemui.statusbar.policy.FlashlightController;
+ import dagger.Lazy;
+ 
+ import java.util.function.Consumer;
+-import java.util.concurrent.Executor;
+ 
+ import javax.inject.Inject;
+ import javax.inject.Named;
+@@ -130,17 +129,6 @@ public class Dependency {
+     private final ArrayMap<Object, Object> mDependencies = new ArrayMap<>();
+     private final ArrayMap<Object, LazyDependencyCreator> mProviders = new ArrayMap<>();
+ 
+-    /**
+-     * Generic executor on a background thread.
+-     */
+-    private static final String BACKGROUND_EXECUTOR_NAME = "background_executor";
+-
+-    /**
+-     * Generic executor on a background thread.
+-     */
+-    public static final DependencyKey<Executor> BACKGROUND_EXECUTOR =
+-            new DependencyKey<>(BACKGROUND_EXECUTOR_NAME);
+-
+     @Inject DumpManager mDumpManager;
+ 
+     @Inject Lazy<FalsingManager> mFalsingManager;
+@@ -191,7 +179,6 @@ public class Dependency {
+     @Inject Lazy<FlashlightController> mFlashlightController;
+     @Inject Lazy<BluetoothDetailsContentViewModel> mBluetoothDetailsContentViewModel;
+     @Inject Lazy<HotspotController> mHotspotController;
+-    @Inject @Background Lazy<Executor> mBackgroundExecutor;
+ 
+     @Inject
+     public Dependency() {
+@@ -251,7 +238,6 @@ public class Dependency {
+         mProviders.put(BluetoothDetailsContentViewModel.class, mBluetoothDetailsContentViewModel::get);
+         mProviders.put(ActivityStarter.class, mActivityStarter::get);
+         mProviders.put(HotspotController.class, mHotspotController::get);
+-        mProviders.put(BACKGROUND_EXECUTOR, mBackgroundExecutor::get);
+ 
+         Dependency.setInstance(this);
+     }
+diff --git a/packages/SystemUI/src/com/android/systemui/navigationbar/gestural/BackPanel.kt b/packages/SystemUI/src/com/android/systemui/navigationbar/gestural/BackPanel.kt
+index 684813d4e557..76f7b994e4b7 100644
+--- a/packages/SystemUI/src/com/android/systemui/navigationbar/gestural/BackPanel.kt
++++ b/packages/SystemUI/src/com/android/systemui/navigationbar/gestural/BackPanel.kt
+@@ -3,22 +3,17 @@ package com.android.systemui.navigationbar.gestural
+ import android.content.Context
+ import android.content.res.Configuration
+ import android.graphics.Canvas
+-import android.graphics.Matrix
+ import android.graphics.Paint
+ import android.graphics.Path
+ import android.graphics.RectF
+ import android.util.MathUtils.min
+-import android.view.ContextThemeWrapper
+ import android.view.View
+ import androidx.dynamicanimation.animation.FloatPropertyCompat
+ import androidx.dynamicanimation.animation.SpringAnimation
+ import androidx.dynamicanimation.animation.SpringForce
+ import com.android.internal.util.LatencyTracker
+-import com.android.settingslib.Utils
+ import com.android.systemui.navigationbar.gestural.BackPanelController.DelayedOnAnimationEndListener
+ 
+-import com.android.systemui.res.R
+-
+ private const val TAG = "BackPanel"
+ private const val DEBUG = false
+ 
+@@ -39,9 +34,6 @@ class BackPanel(context: Context, private val latencyTracker: LatencyTracker) :
+     // Arrow background color and shape
+     private var arrowBackgroundRect = RectF()
+     private var arrowBackgroundPaint = Paint()
+-    
+-    private val arrowColorLight: Int
+-    private val arrowColorDark: Int
+ 
+     // True if the panel is currently on the left of the screen
+     var isLeftPanel = false
+@@ -287,23 +279,6 @@ class BackPanel(context: Context, private val latencyTracker: LatencyTracker) :
+     }
+ 
+     init {
+-        val lightThemeWrapper = ContextThemeWrapper(
+-            context,
+-            Utils.getThemeAttr(context, R.attr.lightIconTheme)
+-        )
+-        arrowColorLight = Utils.getColorAttrDefaultColor(
+-            lightThemeWrapper,
+-            R.attr.singleToneColor
+-        )
+-
+-        val darkThemeWrapper = ContextThemeWrapper(
+-            context,
+-            Utils.getThemeAttr(context, R.attr.darkIconTheme)
+-        )
+-        arrowColorDark = Utils.getColorAttrDefaultColor(
+-            darkThemeWrapper,
+-            R.attr.singleToneColor
+-        )
+         visibility = GONE
+         arrowPaint.apply {
+             style = Paint.Style.STROKE
+@@ -514,7 +489,7 @@ class BackPanel(context: Context, private val latencyTracker: LatencyTracker) :
+                 )
+         canvas.drawPath(
+             arrowBackground,
+-            arrowBackgroundPaint.apply { alpha = 0 }
++            arrowBackgroundPaint.apply { alpha = (255 * backgroundAlpha.pos).toInt() },
+         )
+ 
+         val dx = arrowLength.pos
+@@ -536,12 +511,13 @@ class BackPanel(context: Context, private val latencyTracker: LatencyTracker) :
+             }
+         }
+ 
++        val arrowPath = calculateArrowPath(dx = dx, dy = dy)
+         val arrowPaint =
+             arrowPaint.apply { alpha = (255 * min(arrowAlpha.pos, backgroundAlpha.pos)).toInt() }
+         if (isLeftPanel) {
+             canvas.scale(-1f, 1f, dx / 2f, dy / 2f)
+         }
+-        canvas.drawPath(calculateArrowPathEx(arrowPath, arrowPaint, x = dx, y = dy), arrowPaint)
++        canvas.drawPath(arrowPath, arrowPaint)
+         canvas.restore()
+ 
+         if (trackingBackArrowLatency) {
+@@ -577,85 +553,4 @@ class BackPanel(context: Context, private val latencyTracker: LatencyTracker) :
+                 )
+             addRoundRect(this@toPathWithRoundCorners, corners, Path.Direction.CW)
+         }
+-
+-    fun setIsDark(isDark: Boolean) {
+-        arrowPaint.setColor(getArrowColor(isDark))
+-        invalidate()
+-    }
+-
+-    fun getArrowColor(isDark: Boolean): Int {
+-        return if (isDark) arrowColorDark else arrowColorLight
+-    }
+-
+-    fun getArrowBoundingBox(): RectF {
+-        return getArrowBoundingBox(width, height, backgroundWidth.pos, scale.pos, 
+-            scalePivotX.pos, arrowLength.pos, arrowHeight.pos, horizontalTranslation.pos, 
+-            verticalTranslation.pos, isLeftPanel, arrowsPointLeft, arrowPath)
+-    }
+-    
+-    fun getArrowBoundingBox(
+-        width: Int,
+-        height: Int,
+-        backgroundWidth: Float,
+-        scale: Float,
+-        scalePivotX: Float,
+-        dx: Float,
+-        dy: Float,
+-        hTranslation: Float,
+-        vTranslation: Float,
+-        isLeftPanel: Boolean,
+-        arrowsPointLeft: Boolean,
+-        arrowPath: Path
+-    ): RectF {
+-        val matrix = Matrix()
+-        
+-        if (!isLeftPanel) {
+-            matrix.preScale(-1f, 1f, width / 2f, 0f)
+-        }
+-        
+-        matrix.preTranslate(hTranslation, (height * 0.5f) + vTranslation)
+-        matrix.preScale(scale, scale, scalePivotX, 0f)
+-        
+-        val adjustedBackgroundWidth = if (dx > 0) backgroundWidth - dx else backgroundWidth
+-        matrix.preTranslate(adjustedBackgroundWidth / 2, 0f)
+-        
+-        if (arrowsPointLeft xor isLeftPanel) {
+-            matrix.preScale(-1f, 1f, 0f, 0f)
+-            matrix.preTranslate(-dx, 0f)
+-        }
+-        
+-        val rectF = RectF()
+-        arrowPath.computeBounds(rectF, true)
+-        matrix.mapRect(rectF)
+-        return rectF
+-    }
+-
+-    fun calculateArrowPathEx(
+-        arrowPath: Path,
+-        paint: Paint,
+-        x: Float,
+-        y: Float
+-    ): Path {
+-        arrowPath.reset()
+-        val strokeWidth = paint.strokeWidth
+-        val adjustedX = if (x < strokeWidth) 0f else x
+-        
+-        arrowPath.addCircle(0f, 0f, strokeWidth, Path.Direction.CW)
+-        
+-        for (i in 0 until 3) {
+-            val ratio = (i + 1).toFloat() / 3
+-            val xPos = (adjustedX * ratio)
+-            val yPos = (y * ratio)
+-            
+-            arrowPath.addCircle(xPos, yPos, strokeWidth, Path.Direction.CW)
+-            arrowPath.addCircle(xPos, -yPos, strokeWidth, Path.Direction.CW)
+-        }
+-        
+-        paint.style = Paint.Style.FILL
+-        return arrowPath
+-    }
+-    
+-    fun getIsLeftPanel(): Boolean {
+-        return isLeftPanel
+-    }
+ }
+diff --git a/packages/SystemUI/src/com/android/systemui/navigationbar/gestural/BackPanelController.kt b/packages/SystemUI/src/com/android/systemui/navigationbar/gestural/BackPanelController.kt
+index a12b58a097d0..95eb0740ff2e 100644
+--- a/packages/SystemUI/src/com/android/systemui/navigationbar/gestural/BackPanelController.kt
++++ b/packages/SystemUI/src/com/android/systemui/navigationbar/gestural/BackPanelController.kt
+@@ -20,7 +20,6 @@ import android.content.res.Configuration
+ import android.graphics.Color
+ import android.graphics.Paint
+ import android.graphics.Point
+-import android.graphics.Rect
+ import android.os.Handler
+ import android.util.Log
+ import android.util.MathUtils
+@@ -28,7 +27,6 @@ import android.view.Gravity
+ import android.view.HapticFeedbackConstants
+ import android.view.MotionEvent
+ import android.view.VelocityTracker
+-import android.view.View
+ import android.view.ViewConfiguration
+ import android.view.WindowManager
+ import androidx.annotation.VisibleForTesting
+@@ -38,9 +36,7 @@ import androidx.dynamicanimation.animation.DynamicAnimation
+ import com.android.internal.jank.Cuj
+ import com.android.internal.jank.InteractionJankMonitor
+ import com.android.internal.util.LatencyTracker
+-import com.android.systemui.Dependency
+ import com.android.systemui.plugins.NavigationEdgeBackPlugin
+-import com.android.systemui.shared.navigationbar.RegionSamplingHelper
+ import com.android.systemui.statusbar.VibratorHelper
+ import com.android.systemui.statusbar.policy.ConfigurationController
+ import com.android.systemui.util.ViewController
+@@ -49,7 +45,6 @@ import dagger.assisted.Assisted
+ import dagger.assisted.AssistedFactory
+ import dagger.assisted.AssistedInject
+ import java.io.PrintWriter
+-import java.util.concurrent.Executor
+ import kotlin.math.abs
+ import kotlin.math.max
+ import kotlin.math.min
+@@ -109,11 +104,6 @@ constructor(
+     @VisibleForTesting internal var params: EdgePanelParams = EdgePanelParams(resources)
+     @VisibleForTesting internal var currentState: GestureState = GestureState.GONE
+     private var previousState: GestureState = GestureState.GONE
+-    
+-    private var regionSamplingHelper: RegionSamplingHelper? = null
+-    private val samplingRect = Rect()
+-    private var leftInset = 0
+-    private var rightInset = 0
+ 
+     // Screen attributes
+     private lateinit var layoutParams: WindowManager.LayoutParams
+@@ -272,22 +262,6 @@ constructor(
+         updateArrowState(GestureState.GONE, force = true)
+         updateRestingArrowDimens()
+         configurationController.addCallback(configurationListener)
+-        regionSamplingHelper = RegionSamplingHelper(
+-            mView,
+-            object : RegionSamplingHelper.SamplingCallback {
+-                override fun onRegionDarknessChanged(isRegionDark: Boolean) {
+-                    mView.setIsDark(!isRegionDark)
+-                }
+-                override fun getSampledRegion(sampledView: View): Rect {
+-                    return samplingRect
+-                }
+-                override fun isSamplingEnabled(): Boolean {
+-                    return context.displayId == 0
+-                }
+-            },
+-            Dependency.get(Dependency.BACKGROUND_EXECUTOR) as Executor
+-        )
+-        regionSamplingHelper?.setWindowVisible(true)
+     }
+ 
+     /** Update the arrow direction. The arrow should point the same way for both panels. */
+@@ -314,7 +288,6 @@ constructor(
+                 startIsLeft = mView.isLeftPanel
+                 hasPassedDragSlop = false
+                 mView.resetStretch()
+-                regionSamplingStart()
+                 mView.triggerLongSwipe = false
+             }
+             MotionEvent.ACTION_MOVE -> {
+@@ -380,7 +353,6 @@ constructor(
+                     }
+                 }
+                 velocityTracker = null
+-                regionSamplingStop()
+             }
+             MotionEvent.ACTION_CANCEL -> {
+                 mView.triggerLongSwipe = triggerLongSwipe
+@@ -390,40 +362,9 @@ constructor(
+                 interactionJankMonitor.cancel(Cuj.CUJ_BACK_PANEL_ARROW)
+                 updateArrowState(GestureState.GONE)
+                 velocityTracker = null
+-                regionSamplingStop()
+             }
+         }
+     }
+-    
+-    fun regionSamplingStart() {
+-        regionSamplingHelper?.start(samplingRect)
+-    }
+-
+-    fun regionSamplingStop() {
+-        regionSamplingHelper?.stop()
+-    }
+-
+-    fun updateSamplingRect() {
+-        val inset: Int = if (mView.getIsLeftPanel()) {
+-            leftInset.toInt()
+-        } else {
+-            displaySize.x.toInt() - rightInset.toInt() - layoutParams.width.toInt()
+-        }
+-        updateSamplingRect(inset, layoutParams.y.toInt(), displaySize.x.toInt())
+-    }
+-
+-    fun updateSamplingRect(left: Int, top: Int, width: Int) {
+-        val rect = Rect()
+-        mView.getArrowBoundingBox().round(rect)
+-        samplingRect.set(rect)
+-        samplingRect.offset(left, top)
+-        if (samplingRect.right > width) {
+-            samplingRect.offset(width - samplingRect.right, 0)
+-        } else if (samplingRect.left < 0) {
+-            samplingRect.offset(-samplingRect.left, 0)
+-        }
+-        regionSamplingHelper?.updateSamplingRect()
+-    }
+ 
+     private fun cancelAllPendingAnimations() {
+         cancelFailsafe()
+@@ -564,7 +505,6 @@ constructor(
+ 
+         setArrowStrokeAlpha(gestureProgress)
+         setVerticalTranslation(yOffset)
+-        updateSamplingRect()
+     }
+ 
+     private fun setArrowStrokeAlpha(gestureProgress: Float?) {
+@@ -697,8 +637,6 @@ constructor(
+     override fun onDestroy() {
+         cancelFailsafe()
+         windowManager.removeView(mView)
+-        regionSamplingHelper?.stop()
+-        regionSamplingHelper = null
+     }
+ 
+     override fun setIsLeftPanel(isLeftPanel: Boolean) {
+@@ -711,10 +649,7 @@ constructor(
+             }
+     }
+ 
+-    override fun setInsets(insetLeft: Int, insetRight: Int) {
+-        leftInset = insetLeft
+-        rightInset = insetRight
+-    }
++    override fun setInsets(insetLeft: Int, insetRight: Int) = Unit
+ 
+     override fun setBackCallback(callback: NavigationEdgeBackPlugin.BackCallback) {
+         backCallback = callback
+@@ -808,7 +743,6 @@ constructor(
+         yPosition = max(yPosition, params.minArrowYPosition.toFloat())
+         yPosition -= layoutParams.height / 2.0f
+         layoutParams.y = MathUtils.constrain(yPosition.toInt(), 0, displaySize.y)
+-        updateSamplingRect()
+     }
+ 
+     override fun setDisplaySize(displaySize: Point) {
+-- 
+2.50.1
+
