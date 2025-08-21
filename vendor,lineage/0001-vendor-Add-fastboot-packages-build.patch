@@ -31,7 +31,7 @@ index 0000000..633b95b
 --- /dev/null
 +++ b/build/tasks/fb_package.mk
 @@ -0,0 +1,16 @@
-+LINEAGE_TARGET_FB_PACKAGE := $(PRODUCT_OUT)/AresOS-$(ARES_VERSION)-$(ARES_EDITION)-FASTBOOT-$(ARES_BUILD_DATE).zip
++LINEAGE_TARGET_FB_PACKAGE := $(PRODUCT_OUT)/$(LINEAGE_DISPLAY_VERSION)-$(RISING_BUILD_DATE)-FASTBOOT.zip
 +
 +SHA256 := prebuilts/build-tools/path/$(HOST_PREBUILT_TAG)/sha256sum
 +
