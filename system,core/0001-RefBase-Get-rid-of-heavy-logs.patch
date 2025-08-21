@@ -1,0 +1,32 @@
+From 8809346df7b9371f93e67c886a170ddbff0c04ec Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Tue, 19 Aug 2025 17:49:52 +0800
+Subject: [PATCH] RefBase: Get rid of heavy logs
+
+---
+ libutils/binder/RefBase.cpp | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/libutils/binder/RefBase.cpp b/libutils/binder/RefBase.cpp
+index 7142c4d..f63535f 100644
+--- a/libutils/binder/RefBase.cpp
++++ b/libutils/binder/RefBase.cpp
+@@ -802,11 +802,11 @@ RefBase::~RefBase()
+             // However, this is dangerous because it's also common for code to use the
+             // sp<T>(T*) constructor, assuming that if the object is around, it is already
+             // owned by an sp<>.
+-            ALOGW("RefBase: Explicit destruction, weak count = %d (in %p). Use sp<> to manage this "
+-                  "object. Note - if weak count is 0, this leaks mRefs (weakref_impl).",
+-                  mRefs->mWeak.load(), this);
++            //ALOGW("RefBase: Explicit destruction, weak count = %d (in %p). Use sp<> to manage this "
++            //      "object. Note - if weak count is 0, this leaks mRefs (weakref_impl).",
++            //      mRefs->mWeak.load(), this);
+ 
+-#if ANDROID_UTILS_CALLSTACK_ENABLED
++#if 0//ANDROID_UTILS_CALLSTACK_ENABLED
+             CallStack::logStack(LOG_TAG);
+ #endif
+         } else if (strongs != 0) {
+-- 
+2.50.1
+

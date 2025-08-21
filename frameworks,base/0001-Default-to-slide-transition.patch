@@ -1,0 +1,25 @@
+From 2acc6bb5bff6712a9920c1d8359f4e2da175b683 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Thu, 21 Aug 2025 11:41:05 +0800
+Subject: [PATCH] Default to slide transition
+
+---
+ core/java/android/view/animation/AnimationUtils.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/core/java/android/view/animation/AnimationUtils.java b/core/java/android/view/animation/AnimationUtils.java
+index 4f12750fa..9ad79bd5f 100644
+--- a/core/java/android/view/animation/AnimationUtils.java
++++ b/core/java/android/view/animation/AnimationUtils.java
+@@ -240,7 +240,7 @@ public class AnimationUtils {
+             throws NotFoundException {
+         int animStyle = Settings.System.getInt(
+                 context.getContentResolver(), 
+-                "system_animation_style", 0);
++                "system_animation_style", 3);
+         if (animStyle != lastAnimStyle) {
+             clearCachedAnimations();
+             lastAnimStyle = animStyle;
+-- 
+2.50.1
+
