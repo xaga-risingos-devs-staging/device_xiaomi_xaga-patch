@@ -1,0 +1,30 @@
+From b7ed8cac7fdf4977e44d6324fa474ace58497c17 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Sat, 23 Aug 2025 12:23:03 +0800
+Subject: [PATCH] Fix fingerprint when using app clone on mt6895 xaga
+
+---
+ libutils/binder/RefBase.cpp | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/libutils/binder/RefBase.cpp b/libutils/binder/RefBase.cpp
+index f63535f..e418246 100644
+--- a/libutils/binder/RefBase.cpp
++++ b/libutils/binder/RefBase.cpp
+@@ -487,8 +487,12 @@ void RefBase::incStrongRequireStrong(const void* id) const {
+ void RefBase::decStrong(const void* id) const
+ {
+     weakref_impl* const refs = mRefs;
++    if (refs == nullptr) {
++        ALOGE("RefBase::decStrong called on object with null mRefs - possible use after free. "
++        "Object: %p, id: %p", this, id);
++        return;
++    }
+     refs->removeStrongRef(id);
+-
+     // Check if count is already at or below 1 before decrementing
+     int32_t c = refs->mStrong.load(std::memory_order_relaxed);
+     if (c <= 1) {
+-- 
+2.50.1
+
