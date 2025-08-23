@@ -1,0 +1,143 @@
+From 6fbb6a94d511aba0d6eef95c257ae9b6e0a0fc17 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Sat, 23 Aug 2025 12:22:10 +0800
+Subject: [PATCH] Fix fingerprint when using app clone on mt6895 xaga
+
+---
+ .../sensors/AuthSessionCoordinator.java       |  4 ++
+ .../fingerprint/aidl/FingerprintProvider.java | 49 ++++++++++++++++++-
+ 2 files changed, 52 insertions(+), 1 deletion(-)
+
+diff --git a/services/core/java/com/android/server/biometrics/sensors/AuthSessionCoordinator.java b/services/core/java/com/android/server/biometrics/sensors/AuthSessionCoordinator.java
+index dc2eff484..9c1f66c38 100644
+--- a/services/core/java/com/android/server/biometrics/sensors/AuthSessionCoordinator.java
++++ b/services/core/java/com/android/server/biometrics/sensors/AuthSessionCoordinator.java
+@@ -177,6 +177,10 @@ public class AuthSessionCoordinator implements AuthSessionListener {
+     @Override
+     public void resetLockoutFor(int userId, @Authenticators.Types int biometricStrength,
+             long requestId) {
++        if (userId == 999) {
++            Slog.w(TAG, "Ignoring resetLockoutFor for cloned app user " + userId);
++            return;
++        }
+         final String resetLockStr =
+                 "resetLockoutFor(userId=" + userId + " ,biometricStrength=" + biometricStrength
+                         + ", requestId=" + requestId + ")";
+diff --git a/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java b/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
+index ac05e93bc..d9373ec0b 100644
+--- a/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
++++ b/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
+@@ -427,6 +427,10 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+      * Schedules FingerprintGetAuthenticatorIdClient for specific sensor and user.
+      */
+     protected void scheduleLoadAuthenticatorIdsForUser(int sensorId, int userId) {
++        if (shouldIgnoreClonedUser(userId)) {
++            Slog.w(TAG, "Ignoring scheduleLoadAuthenticatorIdsForUser for cloned app user " + userId);
++            return;
++        }
+         mHandler.post(() -> {
+             final FingerprintGetAuthenticatorIdClient client =
+                     new FingerprintGetAuthenticatorIdClient(mContext,
+@@ -454,6 +458,10 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+ 
+     @Override
+     public void scheduleResetLockout(int sensorId, int userId, @Nullable byte[] hardwareAuthToken) {
++        if (shouldIgnoreClonedUser(userId)) {
++            Slog.w(TAG, "Ignoring scheduleResetLockout for cloned app user " + userId);
++            return;
++        }
+         mHandler.post(() -> {
+             final FingerprintResetLockoutClient client = new FingerprintResetLockoutClient(
+                     mContext, mFingerprintSensors.get(sensorId).getLazySession(), userId,
+@@ -471,6 +479,10 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+     @Override
+     public void scheduleGenerateChallenge(int sensorId, int userId, @NonNull IBinder token,
+             @NonNull IFingerprintServiceReceiver receiver, String opPackageName) {
++        if (shouldIgnoreClonedUser(userId)) {
++            Slog.w(TAG, "Ignoring fingerprint operation for cloned app user 999");
++            return;
++        }
+         mHandler.post(() -> {
+             final FingerprintGenerateChallengeClient client =
+                     new FingerprintGenerateChallengeClient(mContext,
+@@ -486,6 +498,10 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+     @Override
+     public void scheduleRevokeChallenge(int sensorId, int userId, @NonNull IBinder token,
+             @NonNull String opPackageName, long challenge) {
++        if (shouldIgnoreClonedUser(userId)) {
++            Slog.w(TAG, "Ignoring fingerprint operation for cloned app user 999");
++            return;
++        }
+         mHandler.post(() -> {
+             final FingerprintRevokeChallengeClient client =
+                     new FingerprintRevokeChallengeClient(mContext,
+@@ -505,6 +521,15 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+             @NonNull IFingerprintServiceReceiver receiver, @NonNull String opPackageName,
+             @FingerprintManager.EnrollReason int enrollReason,
+             @NonNull FingerprintEnrollOptions options) {
++        if (shouldIgnoreClonedUser(userId)) {
++            Slog.w(TAG, "Blocking scheduleEnroll for cloned app user " + userId);
++            try {
++                receiver.onError(FingerprintManager.FINGERPRINT_ERROR_HW_UNAVAILABLE, 0);
++            } catch (RemoteException e) {
++                Slog.e(TAG, "Failed to send error to cloned app", e);
++            }
++            return -1; // Return invalid ID
++        }
+         final long id = mRequestCounter.incrementAndGet();
+         mHandler.post(() -> {
+             final int maxTemplatesPerUser = mFingerprintSensors.get(sensorId).getSensorProperties()
+@@ -536,6 +561,11 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+             @NonNull ClientMonitorCallbackConverter callback,
+             @NonNull FingerprintAuthenticateOptions options,
+             int statsClient) {
++        int userId = options.getUserId();
++        if (shouldIgnoreClonedUser(userId)) {
++            Slog.w(TAG, "Blocking scheduleFingerDetect for cloned app user " + userId);
++            return -1; // Return invalid ID
++        }
+         final long id = mRequestCounter.incrementAndGet();
+         mHandler.post(() -> {
+             final int sensorId = options.getSensorId();
+@@ -559,8 +589,13 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+             @NonNull FingerprintAuthenticateOptions options,
+             long requestId, boolean restricted, int statsClient,
+             boolean allowBackgroundAuthentication) {
++
++        int userId = options.getUserId();
++        if (shouldIgnoreClonedUser(userId)) {
++            Slog.w(TAG, "Blocking scheduleAuthenticate for cloned app user " + userId);
++            return;
++        }
+         mHandler.post(() -> {
+-            final int userId = options.getUserId();
+             final int sensorId = options.getSensorId();
+             final boolean isStrongBiometric = Utils.isStrongBiometric(sensorId);
+             final LockoutTracker lockoutTracker = mFingerprintSensors.get(sensorId)
+@@ -635,6 +670,10 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+     public void scheduleRemove(int sensorId, @NonNull IBinder token,
+             @NonNull IFingerprintServiceReceiver receiver, int fingerId, int userId,
+             @NonNull String opPackageName) {
++        if (shouldIgnoreClonedUser(userId)) {
++            Slog.w(TAG, "Ignoring scheduleRemove for cloned app user " + userId);
++            return;
++        }
+         scheduleRemoveSpecifiedIds(sensorId, token, new int[]{fingerId}, userId, receiver,
+                 opPackageName);
+     }
+@@ -1035,4 +1074,12 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+     public boolean useVhalForTesting() {
+         return (Flags.useVhalForTesting() && mTestHalEnabled);
+     }
++
++    private boolean shouldIgnoreClonedUser(int userId) {
++        if (userId == 999) {
++            Slog.w(TAG, "Ignoring fingerprint operation for cloned app user 999");
++            return true;
++        }
++        return false;
++    }
+ }
+-- 
+2.50.1
+
