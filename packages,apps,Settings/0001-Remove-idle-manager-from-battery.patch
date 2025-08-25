@@ -1,0 +1,29 @@
+From 0e47693b120a2ed23a62f760a64836fc4a209f77 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Sun, 24 Aug 2025 10:57:38 +0800
+Subject: [PATCH] Remove idle manager from battery
+
+---
+ res/xml/power_usage_summary.xml | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/res/xml/power_usage_summary.xml b/res/xml/power_usage_summary.xml
+index 7e4a6ff..5096353 100644
+--- a/res/xml/power_usage_summary.xml
++++ b/res/xml/power_usage_summary.xml
+@@ -78,12 +78,6 @@
+         android:key="charging_control"
+         settings:requiresService="lineagehealth" />
+ 
+-    <com.android.settings.preferences.SystemSettingSwitchPreference
+-        android:key="arcane_idle_manager"
+-        android:title="@string/idle_manager_title"
+-        android:summary="@string/idle_manager_summary"
+-        android:defaultValue="false" />
+-
+     <!-- Battery light -->
+     <lineageos.preference.LineagePartsPreference
+         android:key="battery_lights"
+-- 
+2.50.1
+

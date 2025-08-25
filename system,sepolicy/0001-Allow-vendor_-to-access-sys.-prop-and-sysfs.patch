@@ -1,0 +1,242 @@
+From dc25e8c8e343a884b52472deb30cd10111b490e4 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Mon, 25 Aug 2025 09:17:33 +0800
+Subject: [PATCH] Allow vendor_* to access sys.* prop and sysfs
+
+---
+ private/domain.te   |  12 +--
+ private/property.te | 195 --------------------------------------------
+ 2 files changed, 1 insertion(+), 206 deletions(-)
+
+diff --git a/private/domain.te b/private/domain.te
+index 0b5edc7..6be61c5 100644
+--- a/private/domain.te
++++ b/private/domain.te
+@@ -1969,17 +1969,7 @@ define(`dac_override_allowed', `{
+   zygote
+   userdebug_or_eng(`overlay_remounter')
+ }')
+-neverallow ~dac_override_allowed self:global_capability_class_set dac_override;
+-# Since the kernel checks dac_read_search before dac_override, domains that
+-# have dac_override should also have dac_read_search to eliminate spurious
+-# denials.  Some domains have dac_read_search without having dac_override, so
+-# this list should be a superset of the one above.
+-neverallow ~{
+-  dac_override_allowed
+-  traced_perf
+-  traced_probes
+-  heapprofd
+-} self:global_capability_class_set dac_read_search;
++
+ 
+ # Limit what domains can mount filesystems or change their mount flags.
+ # sdcard_type (including vfat and exfat) and fusefs_type are exempt as a larger
+diff --git a/private/property.te b/private/property.te
+index 757d6fa..25546e6 100644
+--- a/private/property.te
++++ b/private/property.te
+@@ -292,201 +292,6 @@ neverallow {
+   userdebug_or_eng(`-su')
+ } misctrl_prop:property_service set;
+ 
+-compatible_property_only(`
+-# Prevent properties from being set
+-  neverallow {
+-    domain
+-    -coredomain
+-    -appdomain
+-    -vendor_init
+-  } {
+-    core_property_type
+-    extended_core_property_type
+-    exported_config_prop
+-    exported_default_prop
+-    exported_dumpstate_prop
+-    exported_system_prop
+-    exported3_system_prop
+-    usb_control_prop
+-    -nfc_prop
+-    -powerctl_prop
+-    -radio_prop
+-  }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -appdomain
+-    -hal_nfc_server
+-  } {
+-    nfc_prop
+-  }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -appdomain
+-    -hal_telephony_server
+-    -vendor_init
+-  } {
+-    radio_control_prop
+-  }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -appdomain
+-    -hal_telephony_server
+-  } {
+-    radio_prop
+-  }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -bluetooth
+-    -hal_bluetooth_server
+-  } {
+-    bluetooth_prop
+-  }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -bluetooth
+-    -hal_bluetooth_server
+-    -vendor_init
+-  } {
+-    exported_bluetooth_prop
+-  }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -hal_camera_server
+-    -cameraserver
+-    -vendor_init
+-  } {
+-    exported_camera_prop
+-  }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -hal_wifi_server
+-    -wificond
+-  } {
+-    wifi_prop
+-  }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -init
+-    -dumpstate
+-    -hal_wifi_server
+-    -wificond
+-    -vendor_init
+-  } {
+-    wifi_hal_prop
+-  }:property_service set;
+-
+-# Prevent properties from being read
+-  neverallow {
+-    domain
+-    -coredomain
+-    -appdomain
+-    -vendor_init
+-  } {
+-    core_property_type
+-    dalvik_config_prop_type
+-    extended_core_property_type
+-    exported3_system_prop
+-    systemsound_config_prop
+-    -debug_prop
+-    -logd_prop
+-    -nfc_prop
+-    -powerctl_prop
+-    -radio_prop
+-    -dalvik_dynamic_config_prop
+-  }:file no_rw_file_perms;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -appdomain
+-    -vendor_init
+-    -hal_power_server
+-  } dalvik_dynamic_config_prop:file no_rw_file_perms;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -appdomain
+-    -hal_nfc_server
+-  } {
+-    nfc_prop
+-  }:file no_rw_file_perms;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -appdomain
+-    -hal_telephony_server
+-  } {
+-    radio_prop
+-  }:file no_rw_file_perms;
+-
+-  neverallow {
+-    -domain
+-    -coredomain
+-    -bluetooth
+-    -hal_bluetooth_server
+-  } {
+-    bluetooth_prop
+-  }:file no_rw_file_perms;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -hal_wifi_server
+-    -wificond
+-  } {
+-    wifi_prop
+-  }:file no_rw_file_perms;
+-
+-  neverallow {
+-    domain
+-    -coredomain
+-    -vendor_init
+-  } {
+-    suspend_prop
+-  }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -init
+-  } {
+-    suspend_debug_prop
+-  }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -init
+-    -vendor_init
+-  } {
+-    high_barometer_quality_prop
+-    }:property_service set;
+-
+-  neverallow {
+-    domain
+-    -init
+-    -dumpstate
+-    userdebug_or_eng(`-system_suspend')
+-    } {
+-      suspend_debug_prop
+-    }:file no_rw_file_perms;
+-')
+-
+ dontaudit system_suspend suspend_debug_prop:file r_file_perms;
+ 
+ compatible_property_only(`
+-- 
+2.50.1
+

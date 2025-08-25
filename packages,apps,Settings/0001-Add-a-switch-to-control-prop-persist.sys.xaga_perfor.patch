@@ -1,0 +1,69 @@
+From 3fb24e18b03d7859607bdc097383cf4f5f6117e9 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Mon, 25 Aug 2025 09:20:25 +0800
+Subject: [PATCH] Add a switch to control prop
+ persist.sys.xaga_performance_mode
+
+---
+ res/xml/power_usage_summary.xml                     |  6 ++++++
+ .../fuelgauge/batteryusage/PowerUsageSummary.java   | 13 ++++++++++++-
+ 2 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/res/xml/power_usage_summary.xml b/res/xml/power_usage_summary.xml
+index 5096353..fd5573f 100644
+--- a/res/xml/power_usage_summary.xml
++++ b/res/xml/power_usage_summary.xml
+@@ -90,6 +90,12 @@
+         android:summary="@string/battery_percentage_description"
+         settings:controller="com.android.settings.display.BatteryPercentagePreferenceController" />
+ 
++    <SwitchPreference
++        android:key="xaga_performance_mode"
++        android:title="Performance Mode"
++        android:summary="Enable high performance profile for gaming and intensive tasks"
++        android:defaultValue="true" />
++
+     <Preference
+         android:key="battery_info"
+         android:title="@string/battery_info"
+diff --git a/src/com/android/settings/fuelgauge/batteryusage/PowerUsageSummary.java b/src/com/android/settings/fuelgauge/batteryusage/PowerUsageSummary.java
+index 66c2ee9..176505a 100644
+--- a/src/com/android/settings/fuelgauge/batteryusage/PowerUsageSummary.java
++++ b/src/com/android/settings/fuelgauge/batteryusage/PowerUsageSummary.java
+@@ -25,6 +25,7 @@ import android.database.ContentObserver;
+ import android.net.Uri;
+ import android.os.Bundle;
+ import android.os.Handler;
++import android.os.SystemProperties;
+ import android.provider.Settings.Global;
+ 
+ import androidx.annotation.NonNull;
+@@ -33,6 +34,7 @@ import androidx.annotation.VisibleForTesting;
+ import androidx.loader.app.LoaderManager;
+ import androidx.loader.content.Loader;
+ import androidx.preference.Preference;
++import androidx.preference.SwitchPreference;
+ 
+ import com.android.settings.R;
+ import com.android.settings.Utils;
+@@ -144,7 +146,16 @@ public class PowerUsageSummary extends PowerUsageBase
+ 
+         initFeatureProvider();
+         initPreference();
+-
++        SwitchPreference perfSwitch = findPreference("xaga_performance_mode");
++        if (perfSwitch != null) {
++            boolean enabled = SystemProperties.getBoolean("persist.sys.xaga_performance_mode", false);
++            perfSwitch.setChecked(enabled);
++            perfSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
++                boolean checked = (Boolean) newValue;
++                SystemProperties.set("persist.sys.xaga_performance_mode", checked ? "1" : "0");
++                return true;
++            });
++        }
+         mBatteryUtils = BatteryUtils.getInstance(getContext());
+ 
+         if (Utils.isBatteryPresent(getContext())) {
+-- 
+2.50.1
+
