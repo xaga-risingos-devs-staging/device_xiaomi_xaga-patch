@@ -1,0 +1,25 @@
+From 52e8f9d5df4f3c06dd4d8c6c91ad5169429bc533 Mon Sep 17 00:00:00 2001
+From: shinichi-c <gokus12456@gmail.com>
+Date: Tue, 25 Mar 2025 06:47:46 +0000
+Subject: [PATCH] composer: bump android.hardware.graphics.common to v6
+
+---
+ interfaces/composer/Android.bp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/interfaces/composer/Android.bp b/interfaces/composer/Android.bp
+index dcf78e9..c028c16 100644
+--- a/interfaces/composer/Android.bp
++++ b/interfaces/composer/Android.bp
+@@ -3,7 +3,7 @@ aidl_interface {
+     system_ext_specific: true,
+     srcs: [ "vendor/lindroid/composer/*.aidl" ],
+     imports: [
+-        "android.hardware.graphics.common-V5",
++        "android.hardware.graphics.common-V6",
+     ],
+ 
+     unstable: true,
+-- 
+2.50.1
+
