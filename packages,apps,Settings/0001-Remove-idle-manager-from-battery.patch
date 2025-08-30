@@ -1,4 +1,4 @@
-From 0e47693b120a2ed23a62f760a64836fc4a209f77 Mon Sep 17 00:00:00 2001
+From d471499a6342cf5273728146ab98a0d7bf474d78 Mon Sep 17 00:00:00 2001
 From: Hecheng Yu <kde-yyds@qq.com>
 Date: Sun, 24 Aug 2025 10:57:38 +0800
 Subject: [PATCH] Remove idle manager from battery
@@ -8,11 +8,11 @@ Subject: [PATCH] Remove idle manager from battery
  1 file changed, 6 deletions(-)
 
 diff --git a/res/xml/power_usage_summary.xml b/res/xml/power_usage_summary.xml
-index 7e4a6ff..5096353 100644
+index b635fb7..f2f542a 100644
 --- a/res/xml/power_usage_summary.xml
 +++ b/res/xml/power_usage_summary.xml
-@@ -78,12 +78,6 @@
-         android:key="charging_control"
+@@ -88,12 +88,6 @@
+         settings:controller="com.android.settings.fuelgauge.ChargingSpeedPreferenceController"
          settings:requiresService="lineagehealth" />
  
 -    <com.android.settings.preferences.SystemSettingSwitchPreference
