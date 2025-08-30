@@ -1,0 +1,25 @@
+From e75889ace15ccd0add679e72779dc3767bebfd7b Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Sat, 30 Aug 2025 11:22:37 +0800
+Subject: [PATCH] miuicamera: do not replace aperture
+
+---
+ vendor/Android.bp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vendor/Android.bp b/vendor/Android.bp
+index b976814..b864e84 100644
+--- a/vendor/Android.bp
++++ b/vendor/Android.bp
+@@ -109,7 +109,7 @@ android_app_import {
+ 	name: "MiuiCamera",
+ 	owner: "xiaomi/miuicamera-xaga",
+ 	apk: "proprietary/system/priv-app/MiuiCamera/MiuiCamera.apk",
+-	overrides: ["GoogleCamera", "Camera2", "Aperture", "Flash"],
++	overrides: ["GoogleCamera", "Camera2", "Flash"],
+ 	certificate: "platform",
+ 	dex_preopt: {
+ 		enabled: false,
+-- 
+2.50.1
+

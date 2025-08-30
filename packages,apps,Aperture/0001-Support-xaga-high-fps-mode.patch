@@ -1,0 +1,36 @@
+From f7785992675b591d03536ee70fac799148e4ad34 Mon Sep 17 00:00:00 2001
+From: Hecheng Yu <kde-yyds@qq.com>
+Date: Sat, 30 Aug 2025 11:21:49 +0800
+Subject: [PATCH] Support xaga high fps mode
+
+Change-Id: I2a8273c29a0ddc4530246cb7d77bdacd86bee4d7
+---
+ .../aperture/ext/CaptureRequestOptionsBuilder.kt     | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/app/src/main/java/org/lineageos/aperture/ext/CaptureRequestOptionsBuilder.kt b/app/src/main/java/org/lineageos/aperture/ext/CaptureRequestOptionsBuilder.kt
+index 52658bd..928f4cc 100644
+--- a/app/src/main/java/org/lineageos/aperture/ext/CaptureRequestOptionsBuilder.kt
++++ b/app/src/main/java/org/lineageos/aperture/ext/CaptureRequestOptionsBuilder.kt
+@@ -29,7 +29,17 @@ fun <ValueT> CaptureRequestOptions.Builder.setOrClearCaptureRequestOption(
+ @androidx.camera.camera2.interop.ExperimentalCamera2Interop
+ fun CaptureRequestOptions.Builder.setFrameRate(
+     frameRate: FrameRate?
+-) = setOrClearCaptureRequestOption(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, frameRate?.range)
++): CaptureRequestOptions.Builder {
++    setOrClearCaptureRequestOption(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, frameRate?.range)
++
++    // Explicit check for 60fps upper bound
++    if (frameRate != null && frameRate.range.upper == 60) {
++        val hfpsKey = CaptureRequest.Key("com.mediatek.streamingfeature.hfpsMode", Int::class.java)
++        setCaptureRequestOption(hfpsKey, 1) // Set to 1 for hfps mode
++    }
++
++    return this
++}
+ 
+ @androidx.camera.camera2.interop.ExperimentalCamera2Interop
+ fun CaptureRequestOptions.Builder.setVideoStabilizationMode(
+-- 
+2.50.1
+
